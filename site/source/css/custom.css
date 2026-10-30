@@ -1326,3 +1326,83 @@ html[data-p-color-forced] *::after {
       var(--p-shadow);
   }
 }
+/* =============================================================================
+   18. 首屏音乐模块（js/player.js 注入到 #banner 内）
+       布局对齐参考图：频谱条 → 进度条 + 剩余时间 → 封面 + 曲目信息
+   ============================================================================= */
+#banner.has-music .scroll-down-bar { display: none; }
+
+.p-music {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 4;
+  display: grid; gap: 0.7rem;
+  width: min(1110px, calc(100% - 3rem)); margin: 0 auto; padding: 0 0 1.6rem;
+  pointer-events: none;
+}
+.p-music[hidden] { display: none; }
+.p-music > * { pointer-events: auto; }
+
+.p-music-bars { display: flex; align-items: flex-end; gap: 3px; height: 72px; }
+.p-music-bars > i {
+  flex: 1 1 0; min-width: 2px; height: 3%; border-radius: 2px 2px 0 0;
+  background: linear-gradient(to top, var(--p-accent) 0%, var(--p-accent-2) 65%, #f7eabc 100%);
+  opacity: 0.55; transition: height 90ms linear, opacity 240ms ease;
+}
+.p-music.is-playing .p-music-bars > i { opacity: 0.95; }
+
+.p-music-line { display: flex; align-items: center; gap: 1rem; }
+.p-music-track {
+  position: relative; flex: 1 1 auto; height: 2px; border-radius: 2px;
+  background: rgba(247, 234, 188, 0.28); cursor: pointer; touch-action: none;
+}
+.p-music-fill {
+  position: absolute; left: 0; top: 0; height: 100%; width: 0; border-radius: 2px;
+  background: linear-gradient(90deg, var(--p-accent) 0%, var(--p-accent-2) 100%);
+}
+.p-music-thumb {
+  position: absolute; top: 50%; left: 0; width: 10px; height: 10px; margin-left: -5px;
+  border-radius: 50%; background: #f7f0e2; box-shadow: 0 1px 4px rgba(9, 11, 5, 0.55);
+  transform: translateY(-50%); transition: transform 140ms ease;
+}
+.p-music-track:hover .p-music-thumb, .p-music-track:focus-visible .p-music-thumb { transform: translateY(-50%) scale(1.25); }
+.p-music-time {
+  flex: 0 0 auto; font-size: 0.8125rem; font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em; color: rgba(247, 240, 226, 0.86); text-shadow: 0 1px 3px rgba(9, 11, 5, 0.55);
+}
+
+.p-music-id { display: flex; align-items: center; gap: 0.85rem; min-width: 0; }
+.p-music-cover {
+  flex: 0 0 auto; width: 64px; height: 64px; padding: 0;
+  border: 1px solid rgba(247, 234, 188, 0.35); border-radius: 14px; overflow: hidden;
+  background-image: linear-gradient(150deg, var(--p-accent) 0%, var(--p-accent-2) 100%);
+  cursor: pointer; box-shadow: 0 6px 18px rgba(9, 11, 5, 0.45);
+}
+.p-music-cover img {
+  display: block; width: 100%; height: 100%; object-fit: cover; border-radius: inherit;
+  animation: p-music-spin 20s linear infinite; animation-play-state: paused;
+}
+.p-music.is-playing .p-music-cover img { animation-play-state: running; }
+@keyframes p-music-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.p-music-cover.is-nocover img { visibility: hidden; }
+
+.p-music-meta { min-width: 0; }
+.p-music-title {
+  font-size: 1.0625rem; font-weight: 500; line-height: 1.35; color: #f7f0e2;
+  text-shadow: 0 1px 3px rgba(9, 11, 5, 0.6); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.p-music-artist {
+  margin-top: 0.15rem; font-size: 0.8125rem; color: rgba(247, 240, 226, 0.7);
+  text-shadow: 0 1px 3px rgba(9, 11, 5, 0.5); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+@media (max-width: 767px) {
+  .p-music { width: calc(100% - 2rem); gap: 0.5rem; padding-bottom: 1.1rem; }
+  .p-music-bars { height: 44px; gap: 2px; }
+  .p-music-cover { width: 48px; height: 48px; border-radius: 11px; }
+  .p-music-title { font-size: 0.9375rem; }
+  .p-music-artist, .p-music-time { font-size: 0.75rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .p-music-cover img { animation: none; }
+  .p-music-bars > i { transition: none; }
+}

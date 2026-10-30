@@ -237,6 +237,7 @@ font:
 # 自定义 JS 钩子：把文件放到 source/js/xxx.js，再写成 /js/xxx.js（本阶段留空）
 custom_js:
   - /js/custom.js
+  - /js/player.js   # 首屏音乐模块（曲库来自 /audio/playlist.json）
 
 # 指定自定义 .css 文件路径，用法和 custom_js 相同
 # The usage is the same as custom_js
