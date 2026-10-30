@@ -1,0 +1,1328 @@
+/* =============================================================================
+   custom.css —— 「暖调纸感」原创视觉（阶段 B）+ 插画派生配色（阶段 D）
+   -----------------------------------------------------------------------------
+   ⚠ 换肤入口：只改下面第 1 节的 --p-* token（亮色在 :root，暗色在两处暗色块），
+     整站配色、阴影、圆角、Banner 渐变会一起变——"改这里就能整体换肤"。
+   ⚠ 本文件不 fork 主题：全部是对 hexo-theme-fluid 的覆盖式样式，主题源码零改动。
+   ⚠ 阶段 D：主视觉换成 source/img/banner-forest.jpg，下面所有暗色都从这张图实测取色，
+     亮色从图里最亮 1%（奶油高光 #f7eabc）派生；对照表见 recon/d/REPORT-D.md。
+   ============================================================================= */
+
+/* =============================================================================
+   1. 设计 token（唯一真源）
+   ============================================================================= */
+:root {
+  /* —— 亮色：奶油纸感（阶段 D 由插画亮部派生）——
+     bg 取图里最亮 1% 的 #f7eabc，褪掉浮黄落成纸面；
+     surface 再提一档（board 浮起）；surface-2 是 hover / 行内代码底。 */
+  --p-bg: #f7eedb;
+  --p-surface: #fffaef;
+  --p-surface-2: #f4ebd9;
+  --p-ink: #3b3128;
+  --p-ink-2: #8a7761;
+  --p-heading: #241d17;
+  /* 强调色：图里最饱和的暖色是红发 #ac2500，焦糖取 #a55a2a，浅焦糖取 #cb8a4d，
+     两端都落在 #a55a2a ± 一档内，不再用图外的陶土橙 #b0622f。 */
+  --p-accent: #a55a2a;
+  --p-accent-2: #cb8a4d;
+  --p-line: #e4d9c4;
+  /* 橄榄褐：图里 12 色量化里占比最高的中明度色 #554f2d / #897639 一族，
+     压深到 #6b642f，只给标签、分类这类次要链接用（surface 上 5.78，纸底 5.22）。 */
+  --p-olive: #6b642f;
+
+  /* 暖棕投影（两层：贴地细影 + 大范围柔影） */
+  --p-shadow: 0 1px 2px rgba(83, 56, 30, 0.06), 0 18px 46px -18px rgba(83, 56, 30, 0.26);
+  --p-shadow-sm: 0 1px 2px rgba(83, 56, 30, 0.07), 0 8px 20px -12px rgba(83, 56, 30, 0.22);
+  --p-radius: 12px;
+  --p-gap: 2.5rem;
+
+  /* —— 正文可读性补充 token ——
+     --p-ink-2 / --p-accent 原值在 --p-surface 上实测 4.06 / 4.29，低于小字号正文
+     需要的 4.5:1；下面两个由原值向 --p-heading 混合得到的"文字用"派生值实测达标，
+     只用于文字，原 token 保持原值供阶段 C 引用。 */
+  --p-ink-2-text: #786754;
+  --p-accent-text: #9c582c;
+
+  /* —— 字体：系统栈优先，标题与正文同一族，层级靠字重/字号/字距 —— */
+  --p-font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+    "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", "Source Han Sans SC",
+    "WenQuanYi Micro Hei", sans-serif;
+  --p-font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+
+  /* —— Banner 主视觉（阶段 D）——
+     图：source/img/banner-forest.jpg（1200×764，q86 4:4:4 progressive，218KB，无外部请求）。
+     第 3 节用 cover + background-position 42% 62% 对准人物（人物在画面 x≈42%、y≈62%）。 */
+  --p-banner-art: url("/img/banner-forest.jpg");
+
+  /* Banner 底色三档现在只在插画加载失败时可见（层序里压在插画之下），
+     取自图里最深的橄榄黑 #171a0d / #0c0b07。
+     插画之上只留三层极弱光：奶油高光 #f7eabc、红发 #ac2500 余温、深橄榄暗角。 */
+  --p-banner-1: #4a4322;
+  --p-banner-2: #2b2a16;
+  --p-banner-3: #14150b;
+  --p-banner-glow: rgba(247, 234, 188, 0.05);
+  --p-banner-glow-0: rgba(247, 234, 188, 0);
+  --p-banner-sheen: rgba(247, 234, 188, 0.10);
+  --p-banner-sheen-0: rgba(247, 234, 188, 0);
+  --p-banner-warm: rgba(172, 37, 0, 0.05);
+  --p-banner-warm-0: rgba(172, 37, 0, 0);
+  /* 文字带局部压一档：竖向椭圆（74% × 46%，中心在 50% 50%），
+     让标题行再暗约 0.19 alpha，同时保留图的上 1/3 与林下层亮度 */
+  --p-banner-vignette: rgba(12, 14, 6, 0.20);
+  --p-banner-vignette-0: rgba(12, 14, 6, 0);
+  /* 文字压在插画上：奶油白 #f7f0e2（图里最亮 1% #f7eabc 的近亲，不是纯白） */
+  --p-banner-ink: #f7f0e2;
+  --p-banner-ink-2: rgba(247, 240, 226, 0.90);
+  --p-banner-halo: rgba(9, 11, 5, 0.50);
+  --p-nav-on-banner: #f7f0e2;
+  /* banner 底部向纸面收口用的 0 alpha 版本（第 3 节 linear-gradient） */
+  --p-bg-fade: rgba(247, 238, 219, 0);
+
+  /* 极轻噪点（内联 SVG data-uri，最终不透明度见第 3 节 .035 ≤ 0.04） */
+  --p-noise: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+
+  /* —— Fluid 变量 → 暖调 token（逐一映射，主题自带的暗色块由下面两节覆盖） —— */
+  --body-bg-color: var(--p-bg);
+  --board-bg-color: var(--p-surface);
+  --text-color: var(--p-ink);
+  --sec-text-color: var(--p-ink-2-text);
+  --post-text-color: var(--p-ink);
+  --post-heading-color: var(--p-heading);
+  --post-link-color: var(--p-accent-text);
+  --link-hover-color: var(--p-accent);
+  --link-hover-bg-color: var(--p-surface-2);
+  --line-color: var(--p-line);
+  --navbar-bg-color: var(--p-surface);
+  --navbar-text-color: var(--p-ink);
+  --subtitle-color: var(--p-banner-ink);
+  --scrollbar-color: #c9b79d;
+  --scrollbar-hover-color: var(--p-ink-2);
+  --button-bg-color: transparent;
+  --button-hover-bg-color: var(--p-surface-2);
+  --highlight-bg-color: var(--p-surface-2);
+  --inlinecode-bg-color: var(--p-surface-2);
+  --fold-title-color: var(--p-heading);
+  --fold-border-color: var(--p-line);
+}
+
+/* —— 暗色（手动切换：主题把暗色写在 [data-user-color-scheme="dark"]） —— */
+[data-user-color-scheme="dark"] {
+  /* 暗色不是棕黑，是插画的橄榄黑：#171a0d / #0c0b07 的色相，
+     亮度压到不高于旧值，正文对比度只升不降（12.47 ≥ 旧 12.40）。 */
+  --p-bg: #121409;
+  --p-surface: #1a1d10;
+  --p-surface-2: #23270f;
+  --p-ink: #ddd2c4;
+  --p-ink-2: #a2937f;
+  --p-heading: #f0e6d8;
+  --p-accent: #d68f52;
+  --p-accent-2: #e2b068;
+  --p-line: #363a25;
+  /* 暗色橄榄褐：图里 #897639 / #baa641 压到暗底可读的明度（surface 上 6.86） */
+  --p-olive: #b0a566;
+
+  --p-shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 18px 46px -18px rgba(0, 0, 0, 0.72);
+  --p-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.45), 0 8px 20px -12px rgba(0, 0, 0, 0.6);
+
+  /* 暗色 banner：同一张插画，遮罩与文字色与亮色共用奶油白，
+     只有底部收口换成橄榄黑（--p-bg） */
+  --p-banner-1: #2a2c18;
+  --p-banner-2: #1a1c10;
+  --p-banner-3: #0e100a;
+  --p-banner-glow: rgba(240, 220, 150, 0.06);
+  --p-banner-glow-0: rgba(240, 220, 150, 0);
+  --p-banner-sheen: rgba(240, 220, 150, 0.08);
+  --p-banner-sheen-0: rgba(240, 220, 150, 0);
+  --p-banner-warm: rgba(172, 37, 0, 0.10);
+  --p-banner-warm-0: rgba(172, 37, 0, 0);
+  --p-banner-vignette: rgba(0, 0, 0, 0.26);
+  --p-banner-vignette-0: rgba(0, 0, 0, 0);
+  --p-banner-ink: #f7f0e2;
+  --p-banner-ink-2: rgba(247, 240, 226, 0.90);
+  --p-banner-halo: rgba(0, 0, 0, 0.45);
+  --p-nav-on-banner: rgba(247, 240, 226, 0.94);
+  --p-bg-fade: rgba(18, 20, 9, 0);
+
+  /* 暗色下两个原值本来就达标（5.63 / 6.35），派生值直接沿用 */
+  --p-ink-2-text: #a2937f;
+  --p-accent-text: #d68f52;
+
+  --body-bg-color: var(--p-bg);
+  --board-bg-color: var(--p-surface);
+  --text-color: var(--p-ink);
+  --sec-text-color: var(--p-ink-2-text);
+  --post-text-color: var(--p-ink);
+  --post-heading-color: var(--p-heading);
+  --post-link-color: var(--p-accent-text);
+  --link-hover-color: var(--p-accent);
+  --link-hover-bg-color: var(--p-surface-2);
+  --line-color: var(--p-line);
+  --navbar-bg-color: var(--p-surface);
+  --navbar-text-color: var(--p-ink);
+  --subtitle-color: var(--p-banner-ink);
+  --scrollbar-color: #4a4034;
+  --scrollbar-hover-color: var(--p-ink-2);
+  --button-hover-bg-color: var(--p-surface-2);
+  --highlight-bg-color: var(--p-surface-2);
+  --inlinecode-bg-color: var(--p-surface-2);
+  --fold-title-color: var(--p-heading);
+  --fold-border-color: var(--p-line);
+}
+
+/* —— 暗色（跟随系统：主题选择器 :root:not([data-user-color-scheme]) 特异性更高，
+      必须在这里再映射一遍，否则手动/自动两套里会有一套失效 —— */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-user-color-scheme]) {
+    --p-bg: #121409;
+    --p-surface: #1a1d10;
+    --p-surface-2: #23270f;
+    --p-ink: #ddd2c4;
+    --p-ink-2: #a2937f;
+    --p-heading: #f0e6d8;
+    --p-accent: #d68f52;
+    --p-accent-2: #e2b068;
+    --p-line: #363a25;
+    --p-olive: #b0a566;
+
+    --p-shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 18px 46px -18px rgba(0, 0, 0, 0.72);
+    --p-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.45), 0 8px 20px -12px rgba(0, 0, 0, 0.6);
+
+    --p-banner-1: #2a2c18;
+    --p-banner-2: #1a1c10;
+    --p-banner-3: #0e100a;
+    --p-banner-glow: rgba(240, 220, 150, 0.06);
+    --p-banner-glow-0: rgba(240, 220, 150, 0);
+    --p-banner-sheen: rgba(240, 220, 150, 0.08);
+    --p-banner-sheen-0: rgba(240, 220, 150, 0);
+    --p-banner-warm: rgba(172, 37, 0, 0.10);
+    --p-banner-warm-0: rgba(172, 37, 0, 0);
+    --p-banner-vignette: rgba(0, 0, 0, 0.26);
+    --p-banner-vignette-0: rgba(0, 0, 0, 0);
+    --p-banner-ink: #f7f0e2;
+    --p-banner-ink-2: rgba(247, 240, 226, 0.90);
+    --p-banner-halo: rgba(0, 0, 0, 0.45);
+    --p-nav-on-banner: rgba(247, 240, 226, 0.94);
+    --p-bg-fade: rgba(18, 20, 9, 0);
+
+    --p-ink-2-text: #a2937f;
+    --p-accent-text: #d68f52;
+
+    --body-bg-color: var(--p-bg);
+    --board-bg-color: var(--p-surface);
+    --text-color: var(--p-ink);
+    --sec-text-color: var(--p-ink-2-text);
+    --post-text-color: var(--p-ink);
+    --post-heading-color: var(--p-heading);
+    --post-link-color: var(--p-accent-text);
+    --link-hover-color: var(--p-accent);
+    --link-hover-bg-color: var(--p-surface-2);
+    --line-color: var(--p-line);
+    --navbar-bg-color: var(--p-surface);
+    --navbar-text-color: var(--p-ink);
+    --subtitle-color: var(--p-banner-ink);
+    --scrollbar-color: #4a4034;
+    --scrollbar-hover-color: var(--p-ink-2);
+    --button-hover-bg-color: var(--p-surface-2);
+    --highlight-bg-color: var(--p-surface-2);
+    --inlinecode-bg-color: var(--p-surface-2);
+    --fold-title-color: var(--p-heading);
+    --fold-border-color: var(--p-line);
+  }
+}
+
+/* =============================================================================
+   2. 基础排版：纸感底色 + 中文行高 + 无横向滚动
+   ============================================================================= */
+/* 只给 html 加 overflow-x：主题把 html/body 都写成 height:100%，
+   若 body 也设 overflow-x，body 会变成滚动容器，window.scrollTop 恒为 0，
+   导航变实色/视差/返回顶部就全失效了。 */
+html {
+  overflow-x: hidden;
+}
+
+body {
+  max-width: 100%;
+}
+
+body {
+  font-family: var(--p-font-sans);
+  font-size: 16px;
+  color: var(--text-color);
+  background-color: var(--body-bg-color);
+  letter-spacing: 0.01em;
+  line-height: 1.8;
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
+  font-family: var(--p-font-sans);
+  color: var(--post-heading-color);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+a {
+  color: var(--post-link-color);
+  transition: color 0.2s ease-in-out;
+}
+
+a:hover,
+a:focus {
+  color: var(--link-hover-color);
+  text-decoration: none;
+}
+
+::selection {
+  background: var(--p-accent-2);
+  color: #241d17;
+}
+
+code, kbd, pre, samp, .code, .highlight {
+  font-family: var(--p-font-mono);
+}
+
+hr {
+  border-color: var(--line-color);
+  opacity: 0.9;
+}
+
+/* 滚动条：暖棕，不用系统蓝 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-color);
+  border-radius: 999px;
+}
+
+/* =============================================================================
+   3. 首屏 Banner：暖调多层渐变 + 极轻噪点 + 24s 慢漂移光斑
+      —— 全站唯一的重色区域
+   ============================================================================= */
+#banner {
+  position: relative;
+  overflow: hidden;
+  /* 兜底底色，挡住主题内联 url('') 造成的透明穿透 */
+  background-color: var(--p-banner-2) !important;
+  /* 层序（上→下）——用户要求"插画保持原图亮度，只保留过渡"：
+     1) 底部 31% 多档缓收（唯一的叠加层，只作用在底边，用于与页面底色衔接）
+     2) 插画本体（cover，对准人物，不做任何整体压暗/上色）
+     3) 三档底色压在最底，仅插画缺失时才可见
+     文字可读性不再靠压暗整幅图，改由 #subtitle 的柔和描影承担（见下） */
+  background-image:
+    /* 底部缓收：31% 高的多档渐变，把插画最亮的草地平滑溶进页面底色。
+       单档 10% 会在 banner 底边留下一条硬边（2026-10-30 在暗色下肉眼可见），
+       这里用 color-mix 逐档抬透明度，让曲线接近感知均匀。 */
+    linear-gradient(to top,
+      var(--p-bg) 0%,
+      color-mix(in srgb, var(--p-bg) 90%, transparent) 5%,
+      color-mix(in srgb, var(--p-bg) 72%, transparent) 11%,
+      color-mix(in srgb, var(--p-bg) 48%, transparent) 17%,
+      color-mix(in srgb, var(--p-bg) 26%, transparent) 23%,
+      color-mix(in srgb, var(--p-bg) 10%, transparent) 27%,
+      transparent 31%),
+    var(--p-banner-art),
+    linear-gradient(168deg, var(--p-banner-1) 0%, var(--p-banner-2) 50%, var(--p-banner-3) 100%) !important;
+  background-repeat: no-repeat !important;
+  /* 第 2 层是插画：42% 62% 把人物所在点固定在容器同位置，竖屏裁切也不会把人裁掉 */
+  background-position: center, 42% 62%, center !important;
+  background-size: auto, cover, auto !important;
+  will-change: transform;
+}
+
+/* 慢漂移光斑（24s 级；prefers-reduced-motion 下关掉，见第 14 节） */
+#banner::before {
+  content: "";
+  position: absolute;
+  inset: -12%;
+  pointer-events: none;
+  z-index: 0;
+  background-image: radial-gradient(
+    50% 50% at 50% 50%,
+    var(--p-banner-glow) 0%,
+    var(--p-banner-glow) 30%,
+    var(--p-banner-glow-0) 72%
+  );
+  animation: p-banner-drift 24s ease-in-out infinite alternate;
+}
+
+/* 极轻噪点：内联 SVG，最终不透明度 .035 */
+#banner::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image: var(--p-noise);
+  background-size: 180px 180px;
+  opacity: 0.035;
+}
+
+#banner .full-bg-img {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+/* 主题内联写死 rgba(0,0,0,.3) 的黑蒙版：整屏压暗不需要，直接清掉 */
+#banner .mask {
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+/* 竖屏（≤767px）：方形 banner 把文字带正好压在受光草地和白斗篷上，
+   只在这一档借 .mask 再叠一层薄遮罩（桌面不加，避免把插画压灰）；
+   实测把 post 页 meta 行最亮一格的对比度从 2.94 抬到 5 以上，见 recon/d/REPORT-D.md */
+@media (max-width: 767px) {
+  #banner .mask {
+    background-image: linear-gradient(
+      180deg,
+      rgba(9, 11, 5, 0) 18%,
+      rgba(9, 11, 5, 0.18) 34%,
+      rgba(9, 11, 5, 0.30) 50%,
+      rgba(9, 11, 5, 0.30) 70%,
+      rgba(9, 11, 5, 0) 100%
+    ) !important;
+  }
+}
+
+@keyframes p-banner-drift {
+  0% {
+    transform: translate3d(-3%, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(3%, -2%, 0) scale(1.08);
+  }
+  100% {
+    transform: translate3d(-3%, 0, 0) scale(1);
+  }
+}
+
+/* 首屏文字：纸白压在暖棕上 */
+.banner-text {
+  color: var(--p-banner-ink);
+}
+
+#banner .post-meta,
+#banner .post-metas,
+#banner .post-meta a,
+#banner .post-metas a {
+  color: var(--p-banner-ink-2) !important;
+}
+
+#banner .post-meta a:hover,
+#banner .post-metas a:hover {
+  color: var(--p-banner-ink) !important;
+}
+
+/* 副标题留空时不占位：:empty 只在真的没有内容时命中，恢复文案后自动失效 */
+#subtitle:empty,
+.banner-text:has(#subtitle:empty) {
+  display: none !important;
+}
+
+#subtitle {
+  font-size: 2.5rem;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0.04em;
+  color: var(--p-banner-ink);
+  /* 三层柔和描影：不再靠压暗整幅插画换取可读性。
+     贴字 2px 那层保证字形边缘与受光草地分离，12px 那层在亮部周围造一个过渡暗场，
+     30px halo 负责整体晕开（亮暗两套各自取值） */
+  text-shadow:
+    0 1px 2px rgba(9, 11, 5, 0.75),
+    0 2px 12px rgba(9, 11, 5, 0.55),
+    0 4px 30px var(--p-banner-halo);
+}
+
+/* 打字机光标：参考站字符 _ ，压在插画上所以取奶油白（红发焦糖在橄榄底上只有 2.4） */
+.typed-cursor {
+  color: var(--p-banner-ink);
+  font-weight: 400;
+  margin-left: 0.06em;
+  /* 闪烁由 typed.js 自带的 typedjsBlink 负责（它在运行时注入样式表，晚于本文件）*/
+}
+
+/* 首屏入场：opacity 0→1 + translate3d(0,100%,0)→0（对齐参考站） */
+@keyframes p-fade-in-up {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 100%, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.banner-text.fade-in-up {
+  animation: p-fade-in-up 0.9s cubic-bezier(0.22, 0.61, 0.36, 1) 0.15s both;
+}
+
+/* 下滑箭头：top 0→-1em 往复 + opacity .8→.4→.8（对齐参考站）
+   主题把它钉在 bottom:0，会正好落在底部"收口到纸面"的渐变带上（奶油压奶油看不见），
+   这里整体抬高一档，让箭头始终压在插画上 */
+.scroll-down-bar {
+  bottom: 5.5rem !important;
+  color: var(--p-banner-ink);
+  z-index: 2;
+}
+
+.scroll-down-bar i.iconfont {
+  color: var(--p-banner-ink-2);
+  transform: translateZ(0);
+  animation: p-scroll-down 1.5s ease-in-out infinite;
+}
+
+.scroll-down-bar:hover i.iconfont {
+  color: var(--p-banner-ink);
+}
+
+@keyframes p-scroll-down {
+  0% {
+    top: 0;
+    opacity: 0.8;
+  }
+  50% {
+    top: -1em;
+    opacity: 0.4;
+  }
+  100% {
+    top: 0;
+    opacity: 0.8;
+  }
+}
+
+/* =============================================================================
+   4. 顶部导航：压图时透明，scrollTop > 50 变实色（.top-nav-collapse 由主题 JS 加）
+   ============================================================================= */
+#navbar.navbar {
+  background-color: transparent;
+  background-image: none;
+  border-bottom: 1px solid transparent;
+  box-shadow: none;
+  transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out,
+    border-color 0.2s ease-in-out;
+}
+
+#navbar .navbar-brand,
+#navbar .nav-link,
+#navbar .navbar-toggler,
+#navbar .navbar-toggler i {
+  color: var(--p-nav-on-banner) !important;
+  transition: color 0.2s ease-in-out;
+}
+
+#navbar .navbar-toggler .animated-icon span {
+  background-color: var(--p-nav-on-banner) !important;
+}
+
+#navbar.top-nav-collapse .navbar-toggler .animated-icon span,
+#navbar.navbar-col-show .navbar-toggler .animated-icon span {
+  background-color: var(--text-color) !important;
+}
+
+#navbar .nav-link:hover,
+#navbar .nav-link:focus,
+#navbar .navbar-brand:hover {
+  color: var(--p-accent-text) !important;
+}
+
+/* 滚动后：实色底 + 细线 + 暖影 */
+#navbar.top-nav-collapse,
+#navbar.navbar-col-show {
+  background-color: var(--navbar-bg-color) !important;
+  background-image: none !important;
+  border-bottom: 1px solid var(--line-color);
+  box-shadow: var(--p-shadow-sm);
+}
+
+#navbar.top-nav-collapse .navbar-brand,
+#navbar.top-nav-collapse .nav-link,
+#navbar.top-nav-collapse .navbar-toggler,
+#navbar.top-nav-collapse .navbar-toggler i,
+#navbar.navbar-col-show .navbar-brand,
+#navbar.navbar-col-show .nav-link {
+  color: var(--text-color) !important;
+}
+
+#navbar.top-nav-collapse .nav-link:hover,
+#navbar.top-nav-collapse .nav-link:focus,
+#navbar.navbar-col-show .nav-link:hover {
+  color: var(--p-accent-text) !important;
+}
+
+/* 下拉 / 移动端宫格菜单也换成纸面 */
+#navbar .dropdown-menu {
+  background-color: var(--board-bg-color);
+  border: 1px solid var(--line-color);
+  border-radius: var(--p-radius);
+  box-shadow: var(--p-shadow-sm);
+}
+
+#navbar .dropdown-menu .dropdown-item {
+  color: var(--text-color);
+}
+
+#navbar .dropdown-menu .dropdown-item:hover {
+  background-color: var(--p-surface-2);
+  color: var(--p-accent-text);
+}
+
+#mobile-grid-menu {
+  background-color: var(--board-bg-color);
+  border: 1px solid var(--line-color);
+  border-radius: var(--p-radius);
+  box-shadow: var(--p-shadow);
+}
+
+#mobile-grid-menu .mobile-grid-cell,
+#mobile-grid-menu .mobile-grid-group-header,
+#mobile-grid-menu a {
+  color: var(--text-color);
+}
+
+#mobile-grid-menu a:hover {
+  color: var(--p-accent-text);
+}
+
+/* =============================================================================
+   5. 内容板 #board：上浮压住 banner，圆角 0.5rem，双层暖棕阴影
+   ============================================================================= */
+#board {
+  position: relative;
+  margin-top: -2rem !important;
+  background-color: var(--board-bg-color);
+  border-radius: var(--p-radius);
+  box-shadow: var(--p-shadow);
+  transition: background-color 0.2s ease-in-out;
+}
+
+/* =============================================================================
+   6. 首页列表：不加卡片边框/阴影，靠留白与字级建立层级
+   ============================================================================= */
+.index-card {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: var(--p-gap) 0;
+}
+
+.index-card:first-child {
+  padding-top: calc(var(--p-gap) * 0.5);
+}
+
+.index-header {
+  font-size: 1.375rem;
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+  color: var(--post-heading-color);
+}
+
+.index-header a {
+  color: var(--post-heading-color);
+}
+
+.index-header a:hover {
+  color: var(--p-accent-text);
+}
+
+.index-excerpt {
+  margin-top: 0.75rem;
+  color: var(--sec-text-color);
+  font-size: 0.9375rem;
+  line-height: 1.85;
+  /* 主题把高度写成 calc(1.4rem * 3)，行高变化后会切出半行，这里改成只靠 line-clamp */
+  height: auto !important;
+  max-height: none !important;
+  display: block !important;
+  overflow: visible !important;
+}
+
+.index-excerpt > div,
+.index-excerpt__noimg {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  max-height: none;
+  line-height: 1.85;
+}
+
+.index-btm,
+.index-btm .post-meta,
+.post-meta {
+  color: var(--sec-text-color);
+  font-size: 0.8125rem;
+  letter-spacing: 0.03em;
+}
+
+.index-btm a,
+.post-meta a {
+  color: var(--sec-text-color);
+}
+
+/* 标签 / 分类链接：换成图里的橄榄褐（--p-olive，surface 上 5.78）；
+   banner 内的同类链接由上文 #banner .post-metas a 的 !important 覆盖，仍是奶油白 */
+.post-meta a {
+  color: var(--p-olive);
+}
+
+.index-btm a:hover,
+.post-meta a:hover {
+  color: var(--p-accent-text);
+}
+
+/* 列表页/归档页的行（同样无卡片框） */
+.list-group-item {
+  background: transparent !important;
+  border-color: var(--line-color);
+  color: var(--text-color);
+}
+
+.list-group-item-action:hover,
+.list-group-item-action:focus {
+  background-color: var(--p-surface-2) !important;
+  color: var(--p-accent-text) !important;
+}
+
+/* =============================================================================
+   7. 文章正文排版：中文行高 ≥ 1.75，层级靠字重/字号/字距
+   ============================================================================= */
+.markdown-body {
+  font-family: var(--p-font-sans);
+  font-size: 1rem;
+  line-height: 1.85;
+  color: var(--post-text-color);
+  word-break: break-word;
+}
+
+.markdown-body p,
+.markdown-body li,
+.markdown-body dd,
+.markdown-body blockquote {
+  line-height: 1.85;
+}
+
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4,
+.markdown-body h5,
+.markdown-body h6 {
+  font-family: var(--p-font-sans);
+  color: var(--post-heading-color);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1.45;
+  margin-top: 2.2em;
+  margin-bottom: 0.85em;
+}
+
+.markdown-body h1 {
+  font-size: 1.75rem;
+  letter-spacing: 0.02em;
+}
+
+.markdown-body h2 {
+  font-size: 1.4375rem;
+  padding-bottom: 0.4em;
+  border-bottom: 1px solid var(--line-color);
+}
+
+.markdown-body h3 {
+  font-size: 1.1875rem;
+}
+
+.markdown-body h4 {
+  font-size: 1.0625rem;
+  color: var(--text-color);
+}
+
+.markdown-body a {
+  color: var(--post-link-color);
+  text-decoration: underline;
+  text-decoration-color: var(--p-line);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.22em;
+  transition: color 0.2s ease-in-out, text-decoration-color 0.2s ease-in-out;
+}
+
+.markdown-body a:hover {
+  color: var(--link-hover-color);
+  text-decoration-color: currentColor;
+}
+
+.markdown-body blockquote {
+  padding: 0.35em 0 0.35em 1.15em;
+  margin: 1.6em 0;
+  color: var(--sec-text-color);
+  background: transparent;
+  border-left: 3px solid var(--p-accent-2);
+  font-style: normal;
+}
+
+.markdown-body blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+.markdown-body ul,
+.markdown-body ol {
+  padding-left: 1.5em;
+}
+
+.markdown-body ul > li::marker,
+.markdown-body ol > li::marker {
+  color: var(--p-accent-2);
+}
+
+.markdown-body img {
+  border-radius: calc(var(--p-radius) - 2px);
+  box-shadow: var(--p-shadow-sm);
+  max-width: 100%;
+}
+
+.markdown-body table {
+  border-color: var(--line-color);
+  font-size: 0.9375rem;
+}
+
+.markdown-body table th,
+.markdown-body table td {
+  border-color: var(--line-color);
+}
+
+.markdown-body table th {
+  background-color: var(--p-surface-2);
+  color: var(--post-heading-color);
+  font-weight: 600;
+}
+
+.markdown-body hr {
+  border-top: 1px solid var(--line-color);
+  margin: 2.4em 0;
+}
+
+/* 行内代码 */
+.markdown-body code:not([class*="hljs"]),
+.markdown-body :not(pre) > code {
+  background-color: var(--p-surface-2) !important;
+  color: var(--p-accent-text);
+  border-radius: 6px;
+  padding: 0.12em 0.38em;
+  font-size: 0.9em;
+}
+
+/* 文章头 / 上下篇 / 版权等 */
+.post-content,
+.post-metas,
+.post-prevnext,
+.post-prev,
+.post-next {
+  color: var(--text-color);
+}
+
+.post-prevnext {
+  border-top: 1px solid var(--line-color);
+  padding-top: 1.5rem;
+}
+
+.post-prevnext a {
+  color: var(--text-color);
+}
+
+.post-prevnext a:hover {
+  color: var(--p-accent-text);
+}
+
+/* =============================================================================
+   8. 代码块：纸面二级色 + 圆角 + 复制按钮
+   ============================================================================= */
+.highlight {
+  background-color: var(--p-surface-2) !important;
+  border: 1px solid var(--line-color);
+  border-radius: calc(var(--p-radius) - 4px);
+  margin: 1.6em 0;
+  overflow: hidden;
+}
+
+.highlight .hljs,
+.highlight pre,
+.highlight .table-wrapper {
+  background-color: transparent !important;
+}
+
+.highlight pre {
+  margin: 0;
+  padding: 1rem 1.1rem;
+  font-size: 0.875rem;
+  line-height: 1.7;
+  overflow-x: auto;
+  color: var(--text-color);
+}
+
+.highlight .gutter,
+.highlight .line-number {
+  color: var(--sec-text-color);
+  border-right: 1px solid var(--line-color);
+  opacity: 0.6;
+}
+
+.code-widget,
+.code-widget-copy,
+.code-widget-close {
+  color: var(--sec-text-color) !important;
+  border-radius: 999px;
+  transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out;
+}
+
+.code-widget:hover,
+.code-widget-copy:hover {
+  background-color: var(--p-surface) !important;
+  color: var(--p-accent-text) !important;
+}
+
+/* =============================================================================
+   9. 右侧目录（TOC）
+   ============================================================================= */
+#toc {
+  border-left: 1px solid var(--line-color);
+  padding-left: 0.9rem;
+}
+
+.toc-header {
+  color: var(--sec-text-color);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.toc-header,
+.toc-header > i {
+  color: var(--sec-text-color);
+}
+
+.toc-body {
+  scrollbar-width: thin;
+}
+
+.tocbot-link,
+.tocbot-list a {
+  color: var(--sec-text-color);
+  font-size: 0.875rem;
+  line-height: 1.75;
+  transition: color 0.2s ease-in-out;
+}
+
+.tocbot-link:hover,
+.tocbot-list a:hover {
+  color: var(--p-accent-text);
+}
+
+.tocbot-active-link {
+  color: var(--p-accent-text) !important;
+  font-weight: 600;
+}
+
+.toc-list-item.is-active-li::before,
+.toc-list-item::before {
+  background-color: var(--p-accent) !important;
+}
+
+.toc-toggle {
+  color: var(--sec-text-color);
+}
+
+/* =============================================================================
+   10. 返回顶部：暖棕纸面按钮 + translateY 0→-0.35rem→0 微动
+   ============================================================================= */
+#scroll-top-button {
+  background: var(--board-bg-color);
+  border: 1px solid var(--line-color);
+  border-radius: 999px;
+  box-shadow: var(--p-shadow-sm);
+  transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out,
+    bottom 0.3s ease;
+}
+
+#scroll-top-button i {
+  color: var(--p-accent-text);
+  font-size: 26px;
+}
+
+#scroll-top-button:hover i,
+#scroll-top-button:active i {
+  animation-name: p-scroll-top;
+  animation-duration: 1s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+@keyframes p-scroll-top {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-0.35rem);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+/* =============================================================================
+   11. 顶部加载进度条（nprogress）
+   ============================================================================= */
+#nprogress .bar {
+  background: var(--p-accent) !important;
+  height: 3px !important;
+}
+
+#nprogress .peg {
+  box-shadow: 0 0 10px var(--p-accent), 0 0 6px var(--p-accent-2) !important;
+}
+
+/* =============================================================================
+   12. 图片放大（fancybox）与页脚
+   ============================================================================= */
+.fancybox-bg {
+  background: #1b130c !important;
+}
+
+.fancybox-caption {
+  color: #f0e6d8;
+}
+
+.footer-inner {
+  color: var(--sec-text-color);
+}
+
+.footer-inner a,
+.footer-inner .statistics,
+.footer-inner .beian {
+  color: var(--sec-text-color);
+}
+
+.footer-inner a:hover {
+  color: var(--p-accent-text);
+}
+
+/* 搜索弹窗 / 提示块也纳入暖色体系 */
+#local-search-result .search-list-title {
+  border-left-color: var(--p-accent);
+}
+
+.modal-content {
+  background-color: var(--board-bg-color);
+  border: 1px solid var(--line-color);
+  border-radius: var(--p-radius);
+}
+
+/* =============================================================================
+   13. 响应式：390px 宽不横向滚动
+   ============================================================================= */
+@media (max-width: 767px) {
+  :root {
+    --p-gap: 1.75rem;
+  }
+
+  #board {
+    margin-top: -1rem !important;
+    border-radius: var(--p-radius);
+  }
+
+  #subtitle {
+    font-size: 1.5rem;
+  }
+
+  .banner-text {
+    max-width: calc(100vw - 2.5rem);
+    width: auto;
+  }
+
+  .markdown-body h1 {
+    font-size: 1.5rem;
+  }
+
+  .markdown-body h2 {
+    font-size: 1.25rem;
+  }
+
+  .container {
+    padding-right: 1rem;
+    padding-left: 1rem;
+  }
+
+  /* 长代码/长链接不顶出视口 */
+  .highlight pre,
+  .markdown-body pre {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 420px) {
+  #subtitle {
+    font-size: 1.375rem;
+  }
+
+  .index-header {
+    font-size: 1.1875rem;
+  }
+}
+
+/* =============================================================================
+   14. prefers-reduced-motion：关掉本文件里的全部自定义动画与过渡
+   ============================================================================= */
+@media (prefers-reduced-motion: reduce) {
+  #banner::before,
+  #banner::after,
+  .banner-text.fade-in-up,
+  .scroll-down-bar i.iconfont,
+  #scroll-top-button:hover i,
+  #scroll-top-button:active i,
+  .typed-cursor,
+  #nprogress .bar {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .banner-text.fade-in-up {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  #banner::before {
+    opacity: 0.5;
+    transform: none !important;
+  }
+
+  .scroll-down-bar i.iconfont {
+    opacity: 0.85 !important;
+    top: 0 !important;
+  }
+
+  .typed-cursor {
+    opacity: 1 !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ===== 15. 截图调试开关：?p-color=dark|light（custom.js 会打上 data-p-color-forced） =====
+   只有在带了该查询参数时才生效：强制配色时不走颜色过渡，保证首帧就是终态，
+   正常访问（含用户点月亮切换）不受影响，仍保留 0.2s 的 background-color 过渡。 */
+html[data-p-color-forced] *,
+html[data-p-color-forced] *::before,
+html[data-p-color-forced] *::after {
+  transition: none !important;
+}
+
+/* =============================================================================
+   16. B2 版式修正：正文页容器与首页对齐 + 窄屏不产生任何横向溢出
+   ============================================================================= */
+
+/* —— 16.1 ≥992px：文章页「正文 + 目录」整体与首页容器同宽同左边界 ——
+   主题结构是 .container-fluid.nopadding-x > .row.nomargin-x >
+   [空 side-col][col-lg-8 正文][side-col 目录]，按 16.67% + 66.67% + 16.67% 栅格排，
+   结果正文左边空 240px、目录右边缘贴到离屏幕只剩 15px。
+   这里改成：整行 = 首页那个 .container 的内容宽（1110，左边界 165），
+   正文吃掉剩余宽度，目录固定 226 并与正文留 24，右边界正好落在 1275。 */
+@media (min-width: 992px) {
+  .container-fluid.nopadding-x > .row.nomargin-x {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    max-width: 1140px;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+
+  /* 左侧那一列在文章页恒为空，去掉它才会与首页左边界对齐 */
+  .container-fluid.nopadding-x > .row.nomargin-x > .side-col:first-child {
+    display: none !important;
+  }
+
+  .container-fluid.nopadding-x > .row.nomargin-x > .col-lg-8 {
+    flex: 1 1 0% !important;
+    min-width: 0;
+    width: auto !important;
+    max-width: none !important;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  /* 目录列宽度由目录自身决定：没有目录的页面这一列自然收成 0 */
+  .container-fluid.nopadding-x > .row.nomargin-x > .side-col:last-child {
+    flex: 0 0 250px !important;
+    width: 250px !important;
+    max-width: 250px !important;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  /* 主题给 aside 写了内联 style="margin-left: -1rem"，只能用 !important 覆盖 */
+  .container-fluid.nopadding-x > .row.nomargin-x > .side-col:last-child > .sidebar {
+    width: 226px;
+    margin-left: 24px !important;
+  }
+
+  /* 正文列里的 .container 别再叠一层 15px 内边距，否则 board 左边界会偏 */
+  #board-ctn {
+    width: 100%;
+    max-width: 100%;
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
+/* —— 16.2 ≤767px：代码块软换行 + 表格锁定宽度 + 收起标题锚点 ——
+   窄屏下 highlight 的 table/td/pre 会撑到 583px，被 html{overflow-x:hidden} 裁掉，
+   所以窄屏改成块级 + 软换行：宁可折行，也不让任何元素出视口。 */
+@media (max-width: 767px) {
+  .highlight,
+  .highlight .table-wrapper,
+  .highlight table,
+  .highlight tbody,
+  .highlight tr,
+  .highlight td {
+    display: block !important;
+    width: auto !important;
+    max-width: 100% !important;
+    border: 0 !important;
+  }
+
+  /* 行号列在窄屏会单独挤出一行，干脆收起 */
+  .highlight .gutter,
+  .highlight .line-number {
+    display: none !important;
+  }
+
+  .highlight pre,
+  .highlight code,
+  .highlight .line {
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+    overflow-wrap: anywhere;
+    max-width: 100% !important;
+    overflow-x: visible !important;
+  }
+
+  /* 真表格用固定布局压缩单元格，保留表格语义但不出视口 */
+  .markdown-body table {
+    width: 100% !important;
+    max-width: 100%;
+    table-layout: fixed;
+  }
+
+  .markdown-body table td,
+  .markdown-body table th {
+    word-break: break-word;
+  }
+
+  /* 标题锚点图标：主题给它负的左边距，窄屏会跑到视口外 */
+  .anchorjs-link {
+    display: none !important;
+  }
+
+  /* 版权区那个 200px 的装饰图标，窄屏同样会溢出 */
+  .license-icon {
+    display: none !important;
+  }
+}
+
+/* —— 16.3 ≤991px：返回顶部按钮贴右边缘 16px ——
+   主题按「内容板右侧留白 - 64px」内联设 right，窄屏没有侧边留白时会算到视口外（x≈414）。 */
+@media (max-width: 991px) {
+  #scroll-top-button {
+    right: 1rem !important;
+  }
+}
+
+/* =============================================================================
+   17. 阶段 E：/about/ 顶部改用主题原生 about 版式
+   -----------------------------------------------------------------------------
+   头像圆 / 名字 / 一行 intro / 图标由 Fluid 的 layout/about.ejs 渲染，基座样式在
+   主题 source/css/_pages/_about/about.styl。这一节只做三件事，主题文件一个字节都不改：
+     17.1 头像：主题的黑色投影换成「纸白描边 + 暖棕投影」，尺寸与负上边距收一档，
+          头像因此压在 #board 顶边上；
+     17.2 名字 / intro / 图标：颜色接回 token，图标悬停用 accent；
+     17.3 正文：图标与「关于我」之间收一档留白，第一段不再重复叠加 --p-gap。
+   ============================================================================= */
+
+/* —— 17.1 头像圆：压住 board 顶边，6px 纸白描边（= 板底色）—— */
+#board > .about-avatar {
+  width: 9rem;
+  height: 9rem;
+  margin-top: -7rem;
+}
+
+#board > .about-avatar img {
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 6px var(--board-bg-color),
+    0 0 0 7px var(--p-line),
+    var(--p-shadow);
+}
+
+/* —— 17.2 名字 / intro / 图标 —— */
+.page-about .about-name {
+  color: var(--p-heading);
+  letter-spacing: 0.01em;
+}
+
+.page-about .about-intro {
+  line-height: 1.8;
+  color: var(--p-ink-2-text);
+}
+
+.page-about .about-icons a {
+  color: var(--p-ink-2-text);
+  transition: color 0.2s ease-in-out;
+}
+
+.page-about .about-icons a:hover,
+.page-about .about-icons a:focus-visible {
+  color: var(--p-accent-text);
+}
+
+/* —— 17.3 正文：与图标区之间收一档 —— */
+.page-about .about-content {
+  margin-top: 2rem !important;
+}
+
+.page-about .p-page-about > .p-sec:first-child {
+  margin-top: 0;
+}
+
+/* —— 17.4 ≤576px：头像按窄屏收小，重叠量同步收 —— */
+@media (max-width: 576px) {
+  #board > .about-avatar {
+    width: 7rem;
+    height: 7rem;
+    margin-top: -5.5rem;
+  }
+
+  #board > .about-avatar img {
+    box-shadow:
+      0 0 0 5px var(--board-bg-color),
+      0 0 0 6px var(--p-line),
+      var(--p-shadow);
+  }
+}

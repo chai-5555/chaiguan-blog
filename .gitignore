@@ -1,0 +1,20 @@
+# --- 站点依赖与构建产物 ---
+site/node_modules/
+site/public/
+site/db.json
+
+# --- 部署打包产物（每次 pack.sh 重新生成）---
+deploy/*.tar.gz
+deploy/id_ed25519_chaiguan
+deploy/id_ed25519_chaiguan.pub
+
+# --- 取证 / 抓站产物（体积大，不属于站点源码）---
+recon/
+_probe/
+_research/
+shots/
+
+# --- 临时与系统文件 ---
+*.log
+.DS_Store
+Thumbs.db

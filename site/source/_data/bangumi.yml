@@ -1,0 +1,83 @@
+# source/_data/bangumi.yml —— 番剧墙数据源（加片子只改这个文件）
+#
+# 页面头部（可选）：kicker = 小标签，title = 大标题，lead = 一句导语
+# 每条记录：
+#   title  作品名（必填）
+#   orig   原名，可留空 ''
+#   status 在看 / 已看 / 搁置（决定徽标颜色）
+#   score  0–10 的数字，可带一位小数；写 0 或省略则显示“—”
+#   year   年份数字
+#   note   一句短评
+#   initial 可选：占位封面里显示的字符（默认取 title 首字）
+#   cover   可选：一张封面图路径，填了就替掉占位封面
+#
+# YAML 里的排列顺序 = 页面上的排列顺序。
+
+page:
+  kicker: BANGUMI
+  title: 追番记录
+  lead: 记得住名字的都在这儿；评分只对我自己负责，不影响它好不好。
+
+items:
+  - title: 葬送的芙莉莲
+    orig: 葬送のフリーレン
+    status: 在看
+    score: 9.2
+    year: 2023
+    note: 用极慢的节奏丈量时间，最锋利的反而是那些什么都没发生的日常段落。
+
+  - title: 迷宫饭
+    orig: ダンジョン飯
+    status: 已看
+    score: 9.0
+    year: 2024
+    note: “吃”是这部作品的语法，从食材到欲望都写得恳切，怪物料理居然真的诱人。
+
+  - title: 孤独摇滚！
+    orig: ぼっち・ざ・ろっく！
+    status: 已看
+    score: 8.7
+    year: 2022
+    note: 社恐的内心戏被做成演出，笑点全在节奏上，鼓点收得住。
+
+  - title: 赛博朋克：边缘行者
+    orig: Cyberpunk - Edgerunners
+    status: 已看
+    score: 8.4
+    year: 2022
+    note: 霓虹与血肉齐飞，最后一集能把人一口气抽空，配乐撑起了半部戏。
+
+  - title: 平家物语
+    orig: 平家物語
+    status: 搁置
+    score: 8.8
+    year: 2021
+    note: 祇园精舍的钟声，画面克制到近乎散文，需要整块的安静时间才敢往下看。
+
+  - title: 来自深渊
+    orig: メイドインアビス
+    status: 在看
+    score: 8.1
+    year: 2017
+    note: 可爱画风包裹着向下的宗教，越往下越冷，看两集要停一停。
+
+  - title: 夏目友人帐
+    orig: 夏目友人帳
+    status: 已看
+    score: 8.9
+    year: 2008
+    note: 一集一个告别，温柔得像夏天傍晚的风，适合当睡前读物。
+
+  - title: 吹响！上低音号
+    orig: 響け！ユーフォニアム
+    status: 搁置
+    score: 8.5
+    year: 2015
+    note: 久美子的不甘心比任何一段演奏都响，看到预选就舍不得往下点。
+
+  - title: 摇曳露营△
+    orig: ゆるキャン△
+    status: 已看
+    score: 8.6
+    year: 2018
+    note: 冬夜的低温与一碗热汤，是全片最稳的情绪基础，看完立刻想买炉子。

@@ -1,0 +1,48 @@
+# source/_data/about.yml —— 关于页数据源（改简介只改这个文件）
+#
+# profile：头像区（头像为 CSS 占位，色相由 name 的 hash 派生，不需要图片）
+#   name / role / meta / initial / kicker
+# intro：三到四段自我介绍，一段一个字符串
+# skills：技能 / 在学清单，level 为 1–5 的整数（进度条长度），note 可选
+# contact：联系方式，label + value 两列
+
+profile:
+  kicker: ABOUT
+  name: Chaiguan
+  role: 写代码，也写读到的东西
+  meta: 常驻杭州 · 前端 / 设计工程 · 最近在补排版与图形学
+  initial: C
+
+introTitle: 关于我
+intro:
+  - 白天写前端，晚上读一点书、看一点动画。做过的项目大多在界面与内容之间来回：把结构理清楚，再让它在屏幕上坐得住。
+  - 喜欢“抬手就能改”的东西——一份 YAML 就能更新的页面、一行 token 就能换掉的配色。这门手艺的价值，多半体现在半年后回来还能看懂自己写了什么。
+  - 这个博客是本地的、可复现的：Hexo 生成，一套暖调纸感的覆盖式样式，不 fork 主题，也不用任何外部 CDN。写作流程尽量短，长在积累。
+  - 这里的番剧墙、书单、友链都是数据驱动的，改 source/_data 下的 YAML 即可，模板一行都不用动。
+
+skillsTitle: 技能 / 在学
+skills:
+  - name: HTML / CSS
+    note: 布局、层叠、可访问性
+    level: 5
+  - name: JavaScript / TypeScript
+    note: 工程化与工具链
+    level: 4
+  - name: Hexo / 静态站点
+    note: 生成流程与站点级脚本
+    level: 4
+  - name: 排版与视觉
+    note: 中文正文、字号与灰阶
+    level: 3
+  - name: WebGL / 图形学
+    note: 在学，能画立方体
+    level: 2
+
+contactTitle: 联系
+contact:
+  - label: 邮箱
+    value: hi@chaiguan.example
+  - label: GitHub
+    value: github.com/chaiguan
+  - label: 站点
+    value: chaiguan.example

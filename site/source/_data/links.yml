@@ -1,0 +1,34 @@
+# source/_data/links.yml —— 友链数据源（加邻居只改这个文件）
+#
+# 每条记录：
+#   name   站点名（必填）
+#   desc   一句话（可留空）
+#   url    站点地址（必填，会显示为域名）
+#   host   可选：想显示的域名，默认从 url 里取
+#   initial / cover 可选，含义同 bangumi.yml
+#
+# apply 为页脚那一行申请说明，可留空字符串。
+
+page:
+  kicker: LINKS
+  title: 友链
+  lead: 一些还在坚持写的人；更新不频繁，但每一篇都值得点开。
+
+items:
+  - name: 张青禾的笔记本
+    desc: 手写体之外的观察与笔记，慢但不断更
+    url: https://qinghe.example.com
+  - name: 木南画报
+    desc: 每周一张关于城市光线的照片，附三行说明
+    url: https://munan.example.org
+  - name: 老周的技术周记
+    desc: 后端、编译器，以及每隔一阵就换一次的键盘
+    url: https://laozhou.example.net
+  - name: 静水读书会
+    desc: 一群人先把书读完，再坐下来把它讲清楚
+    url: https://jingshui.example.com
+  - name: 拾光清单
+    desc: 器具、食谱与短途旅行，图文都很克制
+    url: https://shiguang.example.org
+
+apply: 想交换友链？把你的站点名、一句话介绍和地址发到 hi@chaiguan.example，我会手动加进这份 YAML。

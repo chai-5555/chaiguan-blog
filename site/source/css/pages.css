@@ -1,0 +1,610 @@
+/* =============================================================================
+   pages.css —— 四个内容页（番剧 / 书单 / 关于 / 友链）的页面级样式（阶段 C）
+   -----------------------------------------------------------------------------
+   约定（改样式前先读这三条）：
+   1) 只用 custom.css §1 的设计 token：--p-bg --p-surface --p-surface-2 --p-ink
+      --p-ink-2 --p-ink-2-text --p-heading --p-accent --p-accent-2 --p-accent-text
+      --p-line --p-shadow --p-radius --p-gap。本文件不出现任何颜色字面量：
+      需要淡色/浓色时一律用 color-mix() 混合已有 token，暗色因此自动成立。
+   2) 全部选择器都挂在 body 的作用域类下（page-bangumi / page-books /
+      page-about / page-links，由 scripts/pages.js 注入），首页与文章页没有
+      这些类，样式不可能外溢。共享组件用 :is() 一次性列出四个作用域。
+   3) 占位封面/头像的色调由 scripts/pages.js 按标题 hash 写成内联变量
+      --p-tone / --p-tone-2（accent 混入比例）与 --p-tilt（渐变角度）；
+      这里只负责把它们喂给 color-mix()，色相永远来自 accent token。
+   ============================================================================= */
+
+/* =============================================================================
+   1. 页面外壳：页头（kicker / 标题 / 导语 / 统计条）
+   ============================================================================= */
+:is(.page-bangumi, .page-books, .page-about, .page-links) .p-page {
+  font-family: var(--p-font-sans);
+  font-size: 1rem;
+  line-height: 1.75;
+  color: var(--p-ink);
+}
+
+:is(.page-bangumi, .page-books, .page-about, .page-links) .p-page-head {
+  margin: 0 0 var(--p-gap);
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--p-line);
+}
+
+:is(.page-bangumi, .page-books, .page-about, .page-links) .p-kicker {
+  margin: 0 0 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--p-accent-text);
+}
+
+:is(.page-bangumi, .page-books, .page-about, .page-links) .p-page-title {
+  margin: 0 0 0.6rem;
+  font-size: 1.75rem;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: 0.02em;
+  color: var(--p-heading);
+}
+
+:is(.page-bangumi, .page-books, .page-about, .page-links) .p-page-lead {
+  margin: 0;
+  max-width: 40em;
+  font-size: 0.9375rem;
+  line-height: 1.9;
+  color: var(--p-ink-2-text);
+}
+
+:is(.page-bangumi, .page-books, .page-about, .page-links) .p-page-stats {
+  margin: 0.75rem 0 0;
+  font-size: 0.8125rem;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--p-ink-2-text);
+}
+
+:is(.page-bangumi, .page-books, .page-about, .page-links) .p-grid {
+  display: grid;
+  gap: 1.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* =============================================================================
+   2. 占位封面 / 头像：accent 混入比例与渐变角度由 --p-tone / --p-tilt 控制
+   ============================================================================= */
+:is(.page-bangumi, .page-books, .page-about, .page-links) .p-cover {
+  position: relative;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: calc(var(--p-radius) * 0.75);
+  /* 不支持 color-mix 时退回纯 token 底色，不出现突兀色块 */
+  background-color: var(--p-surface-2);
+  background-image: linear-gradient(
+    var(--p-tilt, 135deg),
+    color-mix(in oklab, var(--p-accent) var(--p-tone, 28%), var(--p-surface-2)),
+    color-mix(in oklab, var(--p-accent-2) var(--p-tone-2, 10%), var(--p-surface))
+  );
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--p-ink) 8%, transparent);
+}
+
+:is(.page-bangumi, .page-books, .page-about, .page-links) .p-cover-glyph {
+  font-size: 2.25rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  color: var(--p-heading);
+  opacity: 0.55;
+  user-select: none;
+}
+
+:is(.page-bangumi, .page-books, .page-about, .page-links) .p-cover-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 头像只有一枚，不靠 hash 区分，直接把 accent 的混入比例抬高一级，
+   让圆形在亮暗两种底色上都立得住（仍然只有 token，没有颜色字面量）。 */
+:is(.page-bangumi, .page-books, .page-about, .page-links) .p-avatar {
+  flex: 0 0 auto;
+  width: 6rem;
+  height: 6rem;
+  border-radius: 50%;
+  background-image: linear-gradient(
+    var(--p-tilt, 135deg),
+    color-mix(in oklab, var(--p-accent) 52%, var(--p-surface-2)),
+    color-mix(in oklab, var(--p-accent-2) 26%, var(--p-surface))
+  );
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklab, var(--p-ink) 10%, transparent),
+    0 0 0 4px var(--p-surface);
+}
+
+:is(.page-bangumi, .page-books, .page-about, .page-links) .p-avatar .p-cover-glyph {
+  font-size: 2rem;
+  opacity: 0.62;
+}
+
+:is(.page-bangumi, .page-books, .page-about, .page-links) .p-avatar--sm {
+  width: 2.75rem;
+  height: 2.75rem;
+}
+
+:is(.page-bangumi, .page-books, .page-about, .page-links) .p-avatar--sm .p-cover-glyph {
+  font-size: 1.125rem;
+}
+
+/* =============================================================================
+   3. 卡片外壳 + 状态徽标
+   ============================================================================= */
+:is(.page-bangumi, .page-books, .page-about, .page-links) .p-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  min-width: 0;
+  padding: 0.75rem;
+  background-color: var(--p-surface-2);
+  border: 1px solid var(--p-line);
+  border-radius: var(--p-radius);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+:is(.page-bangumi, .page-books, .page-about, .page-links) .p-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+:is(.page-bangumi, .page-books, .page-about, .page-links) .p-card-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+  color: var(--p-heading);
+  overflow-wrap: break-word;
+}
+
+:is(.page-bangumi, .page-books, .page-about, .page-links) .p-card-orig {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--p-ink-2-text);
+  overflow-wrap: break-word;
+}
+
+:is(.page-bangumi, .page-books, .page-about, .page-links) .p-card-note {
+  margin: 0.15rem 0 0;
+  font-size: 0.875rem;
+  line-height: 1.7;
+  color: var(--p-ink-2-text);
+  overflow-wrap: break-word;
+}
+
+:is(.page-bangumi, .page-books, .page-about, .page-links) .p-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.15rem 0 0;
+  font-variant-numeric: tabular-nums;
+}
+
+:is(.page-bangumi, .page-books, .page-about, .page-links) .p-meta-year {
+  font-size: 0.8125rem;
+  color: var(--p-ink-2-text);
+}
+
+:is(.page-bangumi, .page-books, .page-about, .page-links) .p-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1rem 0.5rem;
+  border: 1px solid var(--p-line);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  line-height: 1.6;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  color: var(--p-ink-2-text);
+  background-color: var(--p-surface);
+}
+
+:is(.page-bangumi, .page-books, .page-about, .page-links) .p-badge.is-watching,
+:is(.page-bangumi, .page-books, .page-about, .page-links) .p-badge.is-reading {
+  color: var(--p-accent-text);
+  background-color: color-mix(in oklab, var(--p-accent) 14%, var(--p-surface));
+  border-color: color-mix(in oklab, var(--p-accent) 32%, var(--p-line));
+}
+
+:is(.page-bangumi, .page-books, .page-about, .page-links) .p-badge.is-done {
+  color: var(--p-ink);
+  background-color: color-mix(in oklab, var(--p-ink) 7%, var(--p-surface));
+}
+
+/* =============================================================================
+   4. 评分：0–10 数字 + 细进度条（数字用 heading 色，条用 accent 渐变）
+   ============================================================================= */
+:is(.page-bangumi, .page-books, .page-about, .page-links) .p-score {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-left: auto;
+}
+
+:is(.page-bangumi, .page-books, .page-about, .page-links) .p-score-num {
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--p-heading);
+  font-variant-numeric: tabular-nums;
+}
+
+:is(.page-bangumi, .page-books, .page-about, .page-links) .p-score-bar {
+  display: block;
+  width: 2.75rem;
+  height: 4px;
+  border-radius: 999px;
+  background-color: var(--p-line);
+  overflow: hidden;
+}
+
+:is(.page-bangumi, .page-books, .page-about, .page-links) .p-score-fill {
+  display: block;
+  height: 100%;
+  width: var(--p-score, 0%);
+  border-radius: inherit;
+  background-image: linear-gradient(90deg, var(--p-accent), var(--p-accent-2));
+}
+
+:is(.page-bangumi, .page-books, .page-about, .page-links) .p-score--nil {
+  font-size: 0.875rem;
+  color: var(--p-ink-2-text);
+}
+
+/* =============================================================================
+   5. 番剧墙：封面 3:4 海报 + 标题 / 原名 / 状态 / 年份 / 评分 / 短评
+   ============================================================================= */
+.page-bangumi .p-grid-anime {
+  grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+}
+
+.page-bangumi .p-anime .p-cover {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+}
+
+.page-bangumi .p-anime:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in oklab, var(--p-accent) 34%, var(--p-line));
+  box-shadow: var(--p-shadow);
+}
+
+.page-bangumi .p-anime .p-card-title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+
+.page-bangumi .p-anime .p-card-orig {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.page-bangumi .p-anime .p-card-note {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+}
+
+/* =============================================================================
+   6. 书单：横向卡片（窄封面 + 书名 / 作者 / 状态 / 评分 / 短评）
+   ============================================================================= */
+.page-books .p-grid-books {
+  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+}
+
+.page-books .p-book {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 0.9rem;
+  padding: 0.9rem 1rem;
+}
+
+.page-books .p-book:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in oklab, var(--p-accent) 34%, var(--p-line));
+  box-shadow: var(--p-shadow);
+}
+
+.page-books .p-cover--chip {
+  flex: 0 0 auto;
+  width: 3.25rem;
+  height: 4.5rem;
+}
+
+.page-books .p-cover--chip .p-cover-glyph {
+  font-size: 1.25rem;
+}
+
+.page-books .p-book .p-card-body {
+  flex: 1 1 auto;
+}
+
+.page-books .p-book-author {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--p-accent-text);
+}
+
+.page-books .p-book .p-card-note {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+}
+
+/* =============================================================================
+   7. 关于页：自我介绍 / 技能条 / 联系方式
+   （头像圆、名字、一行 intro、图标由主题原生 about 版式渲染，见 custom.css §17）
+   ============================================================================= */
+.page-about .p-sec {
+  margin-top: var(--p-gap);
+}
+
+/* 小标题：去掉左侧装饰短横（它造成约 34px 的视觉缩进），字号提到正文的 1.4 倍左右，
+   下方一条贯穿内容宽度的淡暖线——颜色由 accent 与 line 混出，亮暗两套自动跟随 */
+.page-about .p-sec-title {
+  margin: 0 0 1.25rem;
+  padding: 0 0 0.65rem;
+  font-size: 1.3125rem;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: 0.01em;
+  color: var(--p-heading);
+  border-bottom: 1px solid color-mix(in srgb, var(--p-accent) 32%, var(--p-line));
+}
+
+@media (max-width: 576px) {
+  .page-about .p-sec-title {
+    font-size: 1.1875rem;
+    padding-bottom: 0.55rem;
+  }
+}
+
+.page-about .p-prose p {
+  margin: 0 0 1em;
+  max-width: 40em;
+  line-height: 1.9;
+  color: var(--p-ink);
+}
+
+.page-about .p-prose p:last-child {
+  margin-bottom: 0;
+}
+
+.page-about .p-skills,
+.page-about .p-contact {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* 技能行是"并列内容"，不是小标题：不描边、不粗体、不抢标题色，
+   节奏靠下面的进度条自己撑；行间只留呼吸感 */
+.page-about .p-skill {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.75rem;
+  padding: 0.7rem 0;
+}
+
+.page-about .p-skill:last-child {
+  border-bottom: 0;
+}
+
+.page-about .p-skill-name {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--p-ink);
+}
+
+.page-about .p-skill-note {
+  font-size: 0.8125rem;
+  color: var(--p-ink-2-text);
+}
+
+.page-about .p-skill-bar {
+  display: block;
+  flex: 1 1 100%;
+  height: 6px;
+  margin-top: 0.35rem;
+  border-radius: 999px;
+  background-color: var(--p-line);
+  overflow: hidden;
+}
+
+.page-about .p-skill-bar > i {
+  display: block;
+  height: 100%;
+  width: var(--p-level, 0%);
+  border-radius: inherit;
+  background-image: linear-gradient(90deg, var(--p-accent), var(--p-accent-2));
+}
+
+/* 联系区是键值并列（表格式内容）：分隔线保留但压到 55% 透明度，
+   标签用次要色、值用正文色——读起来是"内容"，不会误当成小标题 */
+.page-about .p-contact-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.25rem 1rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--p-line) 55%, transparent);
+}
+
+.page-about .p-contact-row:last-child {
+  border-bottom: 0;
+}
+
+.page-about .p-contact-label {
+  font-size: 0.875rem;
+  color: var(--p-ink-2-text);
+}
+
+.page-about .p-contact-value {
+  font-size: 0.9375rem;
+  color: var(--p-ink);
+  overflow-wrap: break-word;
+}
+
+/* =============================================================================
+   8. 友链：头像占位 + 名称 / 一句话 / 域名
+   ============================================================================= */
+.page-links .p-grid-links {
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+}
+
+.page-links .p-link-card {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  min-width: 0;
+  padding: 0.9rem 1rem;
+  background-color: var(--p-surface-2);
+  border: 1px solid var(--p-line);
+  border-radius: var(--p-radius);
+  color: var(--p-ink);
+  text-decoration: none;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.page-links .p-link-card:hover,
+.page-links .p-link-card:focus-visible {
+  transform: translateY(-2px);
+  border-color: color-mix(in oklab, var(--p-accent) 34%, var(--p-line));
+  box-shadow: var(--p-shadow);
+  text-decoration: none;
+}
+
+.page-links .p-link-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.page-links .p-link-name {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--p-heading);
+}
+
+.page-links .p-link-desc {
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--p-ink-2-text);
+}
+
+.page-links .p-link-host {
+  font-family: var(--p-font-mono);
+  font-size: 0.75rem;
+  line-height: 1.6;
+  letter-spacing: 0.01em;
+  color: var(--p-accent-text);
+  overflow-wrap: anywhere;
+}
+
+.page-links .p-page-foot {
+  margin: var(--p-gap) 0 0;
+  padding: 0.9rem 1.15rem;
+  font-size: 0.875rem;
+  line-height: 1.8;
+  color: var(--p-ink-2-text);
+  background-color: var(--p-surface-2);
+  border-left: 3px solid var(--p-accent);
+  border-radius: 0 var(--p-radius) var(--p-radius) 0;
+}
+
+/* =============================================================================
+   9. 响应式：≤991px 两列、≤576px 一列（番剧卡片转横向，避免超长海报）
+   ============================================================================= */
+@media (max-width: 991px) {
+  .page-bangumi .p-grid-anime {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 767px) {
+  :is(.page-bangumi, .page-books, .page-links) .p-page-title {
+    font-size: 1.5rem;
+  }
+
+  .page-books .p-grid-books,
+  .page-links .p-grid-links {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 576px) {
+  .page-bangumi .p-grid-anime,
+  .page-books .p-grid-books,
+  .page-links .p-grid-links {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* 番剧卡片改横向：窄海报 + 右侧文字，单列时不再出现半屏高的封面 */
+  .page-bangumi .p-anime {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 0.85rem;
+  }
+
+  .page-bangumi .p-anime .p-cover {
+    flex: 0 0 auto;
+    width: 4.25rem;
+    height: 5.75rem;
+    aspect-ratio: auto;
+  }
+
+  .page-bangumi .p-anime .p-cover-glyph {
+    font-size: 1.375rem;
+  }
+
+  .page-bangumi .p-anime .p-card-body {
+    flex: 1 1 auto;
+  }
+}
+
+/* =============================================================================
+   10. prefers-reduced-motion：关掉本文件的位移与过渡
+   ============================================================================= */
+@media (prefers-reduced-motion: reduce) {
+  .page-bangumi .p-anime,
+  .page-books .p-book,
+  .page-links .p-link-card {
+    transition: none;
+  }
+
+  .page-bangumi .p-anime:hover,
+  .page-books .p-book:hover,
+  .page-links .p-link-card:hover,
+  .page-links .p-link-card:focus-visible {
+    transform: none;
+  }
+}

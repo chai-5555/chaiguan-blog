@@ -1,0 +1,59 @@
+# source/_data/books.yml —— 书单数据源（加书只改这个文件）
+#
+# 每条记录：
+#   title  书名（必填）
+#   author 作者（必填）
+#   status 在读 / 读完 / 想读（决定徽标颜色）
+#   score  0–10 的数字；写 0 或省略则显示“—”
+#   note   一句短评
+#   initial / cover 可选，含义同 bangumi.yml
+#
+# YAML 里的排列顺序 = 页面上的排列顺序。
+
+page:
+  kicker: BOOKS
+  title: 书单
+  lead: 读完之后还记得住的那些；评分为当下的主观感受，不做归档标准。
+
+items:
+  - title: 我们仨
+    author: 杨绛
+    status: 读完
+    score: 9.0
+    note: 一家三口的旧梦，写得极轻，落笔极重，几处停顿比句子本身更长。
+
+  - title: 编舟记
+    author: 三浦紫苑
+    status: 读完
+    score: 9.1
+    note: 用十五年编一本辞典，把“热爱”写成了可被度量的耐心。
+
+  - title: 设计中的设计
+    author: 原研哉
+    status: 在读
+    score: 8.6
+    note: “无”也是一种设计，读一半就开始重新审视桌上所有多余的东西。
+
+  - title: 强风吹拂
+    author: 三浦紫苑
+    status: 想读
+    score: 8.8
+    note: 被同名动画拽来看原著，据说箱根驿传那几章读起来会想站起来。
+
+  - title: 人类简史
+    author: 尤瓦尔·赫拉利
+    status: 读完
+    score: 8.2
+    note: 大框架很有启发，细节部分要自己带一份怀疑主义再读。
+
+  - title: 深度工作
+    author: 卡尔·纽波特
+    status: 读完
+    score: 8.4
+    note: 结论并不新奇，可贵的是把“专注”拆成了可执行的日程安排。
+
+  - title: 失控
+    author: 凯文·凯利
+    status: 在读
+    score: 7.9
+    note: 观点密度过高，一次只能读二十页，剩下的时间用来反驳作者。

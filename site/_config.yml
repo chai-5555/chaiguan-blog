@@ -1,0 +1,94 @@
+# Hexo 8 站点配置
+# 品牌占位值集中在 “Site” 一节：改这里就能换掉全站站点名 / 副标题 / 作者
+# Docs: https://hexo.io/docs/configuration.html
+
+# Site
+title: Chaiguan # 站点名：导航栏标题、首页隐藏 h1、SEO title
+subtitle: "" # 首屏副标题：留空 = banner 上不显示任何文字（想恢复就填一句，并打开 fun_features.typing）
+description: 记录技术、番剧与读书的个人博客 # SEO description，一句话
+keywords: 技术, 番剧, 读书, 随笔
+author: chaiguan
+language: zh-CN
+timezone: Asia/Shanghai
+
+# URL
+# 先用服务器 IP + 端口占位，绑定域名后只改这一行
+url: http://120.26.245.237:8080
+# 清晰 slug 方案：文章地址 = /archives/<文章文件名>/，不带日期、不带中文
+permalink: archives/:title/
+permalink_defaults:
+pretty_urls:
+  trailing_index: true # 保留路径末尾的 index.html
+  trailing_html: true
+
+# Directory
+source_dir: source
+public_dir: public
+tag_dir: tags
+archive_dir: archives
+category_dir: categories
+code_dir: downloads/code
+i18n_dir: :lang
+skip_render:
+
+# Writing
+new_post_name: :title.md
+default_layout: post
+titlecase: false
+external_link:
+  enable: true
+  field: site
+  exclude: ''
+filename_case: 0
+render_drafts: false
+post_asset_folder: false
+relative_link: false
+future: true
+# 关闭 Hexo 自带高亮，代码高亮交给 Fluid 的前端 highlight.js，避免二次处理
+syntax_highlighter: ''
+highlight:
+  line_number: true
+  auto_detect: false
+  tab_replace: ''
+  wrap: true
+  hljs: false
+prismjs:
+  preprocess: true
+  line_number: true
+  tab_replace: ''
+
+# Home page setting
+index_generator:
+  path: ''
+  per_page: 10
+  order_by: -date
+
+# Category & Tag
+default_category: uncategorized
+category_map:
+tag_map:
+
+# Metadata elements
+meta_generator: true
+
+# Date / Time format
+date_format: YYYY-MM-DD
+time_format: HH:mm:ss
+updated_option: 'mtime'
+
+# Pagination
+per_page: 10
+pagination_dir: page
+
+# Include / Exclude file(s)
+include:
+exclude:
+ignore:
+
+# Extensions
+# 主题从 npm 包 hexo-theme-fluid 加载，不做 git clone / 不 fork
+theme: fluid
+
+# Deployment
+deploy:
+  type: ''
