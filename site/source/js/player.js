@@ -92,7 +92,10 @@
     audio.hidden = true;
     wrap.appendChild(audio);   // 挂在 DOM 里（便于调试与部分移动端行为一致）
 
+    function resetFake() { fakeMode = false; zeroSince = 0; }
+
     function setTrack(i) {
+      resetFake();
       idx = (i + tracks.length) % tracks.length;
       var t = tracks[idx];
       audio.src = t.src;
@@ -137,12 +140,13 @@
 
     /* 调参用探针：仅在 ?p-music-debug=1 时暴露分析器，正常访问不产生任何全局变量 */
     if (location.search.indexOf('p-music-debug') >= 0) {
-      window.__pMusicDebug = { get analyser() { return analyser; }, get freq() { return freq; }, get level() { return level; } };
+      window.__pMusicDebug = { get analyser() { return analyser; }, get freq() { return freq; }, get level() { return level; }, get isFake() { return fakeMode; }, get playing() { return playing; } };
     }
 
     function paintBars(ts) {
       var i, h;
       if (fakeMode) {
+        if (!playing) return;                     // 暂停时停在最后一帧，不再滚动画
         for (i = 0; i < BAR_COUNT; i++) {
           h = (Math.sin(ts / 520 + i * 0.7) * 0.5 + 0.5) * (0.45 + 0.55 * Math.sin(ts / 1400 + i * 0.31));
           bars[i].style.height = Math.max(2, h * 100).toFixed(1) + '%';
@@ -152,7 +156,7 @@
       analyser.getFloatFrequencyData(freq);   // 单位 dBFS：-100 ≈ 静音，0 = 满刻度
       var maxDb = -Infinity;
       for (i = 0; i < freq.length; i++) if (freq[i] > maxDb) maxDb = freq[i];
-      if (playing && maxDb < -90) {
+      if (playing && !audio.ended && audio.currentTime > 0.2 && maxDb < -90) {
         if (!zeroSince) zeroSince = ts;
         else if (ts - zeroSince > 1200) fakeMode = true;   // 跨域污染等情况下退化为假跳
       } else {
@@ -213,7 +217,7 @@
 
     function loop(ts) {
       rafId = requestAnimationFrame(loop);
-      if (analyser || fakeMode) paintBars(ts);
+      if (playing) paintBars(ts);      // 暂停后停在一帧，不再重绘
       var d = audio.duration;
       if (isFinite(d) && d > 0) {
         var pct = Math.min(100, (audio.currentTime / d) * 100);
@@ -232,6 +236,7 @@
 
     /* ---------- 播放控制 ---------- */
     function play() {
+      resetFake();
       ensureAnalyser();
       var p = audio.play();
       if (p && p.catch) p.catch(function () { playing = false; wrap.classList.remove('is-playing'); });
@@ -248,7 +253,7 @@
 
     cover.addEventListener('click', function () { playing ? pause() : play(); });
 
-    audio.addEventListener('playing', function () { wrap.classList.add('is-playing'); startLoop(); });
+    audio.addEventListener('playing', function () { resetFake(); wrap.classList.add('is-playing'); startLoop(); });
     audio.addEventListener('pause', function () { wrap.classList.remove('is-playing'); });
     audio.addEventListener('ended', function () { setTrack(idx + 1); play(); });
     audio.addEventListener('error', function () { if (tracks.length > 1) { setTrack(idx + 1); if (playing) play(); } });
