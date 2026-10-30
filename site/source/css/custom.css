@@ -1451,6 +1451,20 @@ html[data-p-color-forced] *::after {
   outline: none !important;
 }
 
+/* 播放器与下滑箭头区域：把浏览器可能画的"白线"来源全部关掉 ——
+   焦点框、点击高亮、文本光标（caret）、选区。某浏览器在 tabindex 元素上会画一根
+   竖直光标，看起来就像进度条/倒计时旁边多了一条白线。 */
+.p-music,
+.p-music *,
+#banner.has-music .scroll-down-bar,
+#banner.has-music .scroll-down-bar * {
+  outline: none !important;
+  caret-color: transparent !important;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 .p-music-cover:focus-visible {
   box-shadow: 0 0 0 2px color-mix(in srgb, #f7eabc 75%, transparent), 0 6px 18px rgba(9, 11, 5, 0.45);
 }
