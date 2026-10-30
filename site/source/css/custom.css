@@ -1335,7 +1335,8 @@ html[data-p-color-forced] *::after {
 .p-music {
   position: absolute; left: 0; right: 0; bottom: 0; z-index: 4;
   display: grid; gap: 0.7rem;
-  width: min(1110px, calc(100% - 3rem)); margin: 0 auto; padding: 0 0 1.6rem;
+  /* bottom 躲开 #board 的 -2rem 上浮与阴影，否则曲目信息被纸白 board 压住 */
+  width: min(1110px, calc(100% - 3rem)); margin: 0 auto; bottom: 2.75rem; padding: 0;
   pointer-events: none;
 }
 .p-music[hidden] { display: none; }
@@ -1343,7 +1344,7 @@ html[data-p-color-forced] *::after {
 
 .p-music-bars { display: flex; align-items: flex-end; gap: 3px; height: 72px; }
 .p-music-bars > i {
-  flex: 1 1 0; min-width: 2px; height: 3%; border-radius: 2px 2px 0 0;
+  flex: 1 1 0; min-width: 2px; height: 20%; border-radius: 2px 2px 0 0;
   background: linear-gradient(to top, var(--p-accent) 0%, var(--p-accent-2) 65%, #f7eabc 100%);
   opacity: 0.55; transition: height 90ms linear, opacity 240ms ease;
 }
@@ -1352,7 +1353,7 @@ html[data-p-color-forced] *::after {
 .p-music-line { display: flex; align-items: center; gap: 1rem; }
 .p-music-track {
   position: relative; flex: 1 1 auto; height: 2px; border-radius: 2px;
-  background: rgba(247, 234, 188, 0.28); cursor: pointer; touch-action: none;
+  background: color-mix(in srgb, var(--p-line) 85%, transparent); cursor: pointer; touch-action: none;
 }
 .p-music-fill {
   position: absolute; left: 0; top: 0; height: 100%; width: 0; border-radius: 2px;
@@ -1360,19 +1361,19 @@ html[data-p-color-forced] *::after {
 }
 .p-music-thumb {
   position: absolute; top: 50%; left: 0; width: 10px; height: 10px; margin-left: -5px;
-  border-radius: 50%; background: #f7f0e2; box-shadow: 0 1px 4px rgba(9, 11, 5, 0.55);
+  border-radius: 50%; background: var(--p-heading); box-shadow: 0 1px 4px rgba(9, 11, 5, 0.55);
   transform: translateY(-50%); transition: transform 140ms ease;
 }
 .p-music-track:hover .p-music-thumb, .p-music-track:focus-visible .p-music-thumb { transform: translateY(-50%) scale(1.25); }
 .p-music-time {
   flex: 0 0 auto; font-size: 0.8125rem; font-variant-numeric: tabular-nums;
-  letter-spacing: 0.02em; color: rgba(247, 240, 226, 0.86); text-shadow: 0 1px 3px rgba(9, 11, 5, 0.55);
+  letter-spacing: 0.02em; color: var(--p-ink-2-text);
 }
 
 .p-music-id { display: flex; align-items: center; gap: 0.85rem; min-width: 0; }
 .p-music-cover {
   flex: 0 0 auto; width: 64px; height: 64px; padding: 0;
-  border: 1px solid rgba(247, 234, 188, 0.35); border-radius: 14px; overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--p-line) 80%, transparent); border-radius: 14px; overflow: hidden;
   background-image: linear-gradient(150deg, var(--p-accent) 0%, var(--p-accent-2) 100%);
   cursor: pointer; box-shadow: 0 6px 18px rgba(9, 11, 5, 0.45);
 }
@@ -1386,12 +1387,12 @@ html[data-p-color-forced] *::after {
 
 .p-music-meta { min-width: 0; }
 .p-music-title {
-  font-size: 1.0625rem; font-weight: 500; line-height: 1.35; color: #f7f0e2;
-  text-shadow: 0 1px 3px rgba(9, 11, 5, 0.6); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-size: 1.0625rem; font-weight: 500; line-height: 1.35; color: var(--p-heading);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .p-music-artist {
-  margin-top: 0.15rem; font-size: 0.8125rem; color: rgba(247, 240, 226, 0.7);
-  text-shadow: 0 1px 3px rgba(9, 11, 5, 0.5); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  margin-top: 0.15rem; font-size: 0.8125rem; color: var(--p-ink-2-text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
 @media (max-width: 767px) {
@@ -1406,3 +1407,13 @@ html[data-p-color-forced] *::after {
   .p-music-cover img { animation: none; }
   .p-music-bars > i { transition: none; }
 }
+
+/* 无封面时的占位：主题色渐变 + 曲名首字母 */
+.p-music-cover.is-nocover::after {
+  content: attr(data-initial);
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem; font-weight: 600; color: rgba(247, 240, 226, 0.92);
+  text-shadow: 0 1px 3px rgba(9, 11, 5, 0.45);
+}
+.p-music-cover { position: relative; }

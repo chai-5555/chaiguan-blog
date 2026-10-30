@@ -18,3 +18,6 @@ shots/
 *.log
 .DS_Store
 Thumbs.db
+
+# 用户投递的原始素材（已拷进 site/source/audio，避免仓库双份）
+music/

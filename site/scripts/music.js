@@ -115,7 +115,11 @@ function readId3(file) {
 }
 
 function humanize(name) {
-  return name.replace(/[_.]+/g, ' ').replace(/\s{2,}/g, ' ').trim();
+  return name
+    .replace(/[-_.]+/g, ' ')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+    .replace(/^./, function (c) { return c.toUpperCase(); });
 }
 
 function findSidecar(baseAbs) {

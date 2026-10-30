@@ -89,6 +89,8 @@
     audio.preload = 'metadata';
     audio.crossOrigin = 'anonymous';
     audio.volume = 0.85;
+    audio.hidden = true;
+    wrap.appendChild(audio);   // 挂在 DOM 里（便于调试与部分移动端行为一致）
 
     function setTrack(i) {
       idx = (i + tracks.length) % tracks.length;
@@ -104,7 +106,7 @@
         img.alt = '';
       }
       cover.classList.toggle('is-nocover', !t.cover);
-      cover.style.setProperty('--p-cover-fallback', 'attr(data-x)');
+      cover.dataset.initial = (t.title || '?').trim().charAt(0).toUpperCase();
       wrap.hidden = false;
       time.textContent = '-00:00';
       fill.style.width = '0%';
@@ -147,14 +149,24 @@
       } else {
         zeroSince = 0;
       }
-      var usable = Math.floor(freq.length * 0.72);          // 高频多半是空的，留点余量
+      /* 音乐能量集中在 ~10kHz 以下（fftSize 1024 → 每 bin ≈ 47Hz），
+         取前 42% 的 bin 再按指数拉开，右端不再全空；高频段给一点补偿增益抵消频谱滚降 */
+      var usable = Math.floor(freq.length * 0.42);
+      var vals = new Array(BAR_COUNT);
+      var peak = 1;
       for (i = 0; i < BAR_COUNT; i++) {
-        var a = Math.floor(Math.pow(i / BAR_COUNT, 1.35) * usable);
-        var b = Math.max(a + 1, Math.floor(Math.pow((i + 1) / BAR_COUNT, 1.35) * usable));
-        var v = 0, n = 0;
-        for (var k = a; k < b && k < freq.length; k++) { v += freq[k]; n++; }
-        v = n ? v / n : 0;
-        bars[i].style.height = Math.max(2, (v / 255) * 100).toFixed(1) + '%';
+        var a = Math.floor(Math.pow(i / BAR_COUNT, 1.25) * usable);
+        var b = Math.max(a + 1, Math.floor(Math.pow((i + 1) / BAR_COUNT, 1.25) * usable));
+        var v = 0;
+        for (var k = a; k < b && k < freq.length; k++) if (freq[k] > v) v = freq[k];  // 取峰值比均值更有起伏
+        vals[i] = v;
+        if (v > peak) peak = v;
+      }
+      for (i = 0; i < BAR_COUNT; i++) {
+        /* 逐帧归一化 + 0.7 次幂：音乐高频本来就很弱，不归一化右半边会一直贴地 */
+        var r = Math.pow(vals[i] / peak, 0.7);
+        var tilt = 0.72 + 0.36 * (i / BAR_COUNT);
+        bars[i].style.height = Math.max(2, Math.min(100, r * 100 * tilt)).toFixed(1) + '%';
       }
     }
 
@@ -203,16 +215,22 @@
     /* ---------- 拖动进度 ---------- */
     function seekFromEvent(ev) {
       var r = track.getBoundingClientRect();
-      var x = (ev.touches ? ev.touches[0].clientX : ev.clientX) - r.left;
+      var cx = (ev.touches && ev.touches[0]) ? ev.touches[0].clientX : (ev.clientX != null ? ev.clientX : ev.pageX);
+      var x = cx - r.left;
       var ratio = Math.max(0, Math.min(1, x / r.width));
       if (isFinite(audio.duration)) audio.currentTime = ratio * audio.duration;
       fill.style.width = (ratio * 100) + '%';
       thumb.style.left = (ratio * 100) + '%';
     }
     var dragging = false;
-    track.addEventListener('pointerdown', function (ev) { dragging = true; track.setPointerCapture(ev.pointerId); seekFromEvent(ev); });
+    track.addEventListener('pointerdown', function (ev) {
+      dragging = true;
+      try { track.setPointerCapture(ev.pointerId); } catch (e) { /* 某些合成事件没有有效 pointerId */ }
+      seekFromEvent(ev);
+    });
     track.addEventListener('pointermove', function (ev) { if (dragging) seekFromEvent(ev); });
     track.addEventListener('pointerup', function (ev) { dragging = false; try { track.releasePointerCapture(ev.pointerId); } catch (e) {} });
+    track.addEventListener('click', function (ev) { if (!dragging) seekFromEvent(ev); });
     track.addEventListener('keydown', function (ev) {
       if (!isFinite(audio.duration)) return;
       if (ev.key === 'ArrowRight') { audio.currentTime = Math.min(audio.duration, audio.currentTime + 5); ev.preventDefault(); }
