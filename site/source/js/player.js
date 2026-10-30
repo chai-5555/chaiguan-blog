@@ -220,6 +220,10 @@
         analyser.smoothingTimeConstant = 0.62;   // 帧内平滑少一点，靠下面的攻/释放包络控制手感
         src.connect(analyser);
         analyser.connect(ctx.destination);
+        /* 创建后立刻 resume：MediaElementSource 一旦接到 suspended 的 AudioContext，
+           媒体元素会卡在 currentTime=0、分析器永远读到 -Infinity，
+           表现就是"歌像在放、频谱却是一条上扬的斜坡" */
+        if (ctx.state === 'suspended') ctx.resume();
         freq = new Float32Array(analyser.frequencyBinCount);   // getFloatFrequencyData：dBFS，绝对值
         level = new Float32Array(BAR_COUNT);                   // 每根柱子当前的显示电平（0–1）
         ceilDb = NaN;                                          // 整轨校准出的窗口天花板（只校准一次）
@@ -271,7 +275,10 @@
       var binHz = (analyser.context.sampleRate || 48000) / analyser.fftSize;
       var lnRatio = Math.log(F_MAX / F_MIN);
       var raw = new Array(BAR_COUNT);
+      var rawDb = new Array(BAR_COUNT);
+      var centers = new Array(BAR_COUNT);
       var frameMax = -Infinity;
+      var dbMax = -Infinity;
 
       for (i = 0; i < BAR_COUNT; i++) {
         var f0 = F_MIN * Math.exp(lnRatio * i / BAR_COUNT);
@@ -281,8 +288,26 @@
         var db = -Infinity;
         for (var k = a2; k < b2 && k < freq.length; k++) if (freq[k] > db) db = freq[k];
         if (!isFinite(db)) db = -110;
-        var fc = Math.sqrt(f0 * f1);
-        raw[i] = db + Math.max(-20, Math.min(20, TILT * Math.log(fc / 1000) / Math.LN2));
+        rawDb[i] = db;
+        centers[i] = Math.sqrt(f0 * f1);
+        if (db > dbMax) dbMax = db;
+      }
+
+      /* 没有真信号时（音频还没解码出来 / 静音段 / 分析器读到的是纯底噪），
+         绝不能继续走"倾斜补偿 + AGC"：底噪在每个频段都一样，加上随频率递增的
+         倾斜量后就会画成一条从左到右上扬的斜坡（这就是你截图里那个形状）。
+         这里改为缓慢回落到一条矮平线，并且不动 AGC。 */
+      var noSignal = !isFinite(dbMax) || dbMax < -90 || audio.readyState < 2;
+      if (noSignal) {
+        for (i = 0; i < BAR_COUNT; i++) {
+          level[i] += (0.04 - level[i]) * 0.12;
+          bars[i].style.height = Math.max(2, level[i] * 100).toFixed(1) + '%';
+        }
+        return;
+      }
+
+      for (i = 0; i < BAR_COUNT; i++) {
+        raw[i] = rawDb[i] + Math.max(-20, Math.min(20, TILT * Math.log(centers[i] / 1000) / Math.LN2));
         if (raw[i] > frameMax) frameMax = raw[i];
       }
 
