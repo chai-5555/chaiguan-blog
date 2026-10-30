@@ -77,6 +77,20 @@
     idBox.appendChild(cover);
     idBox.appendChild(meta);
 
+    /* 播放列表按钮：与左侧封面左右对称、尺寸更小（图标是"播放三角 + 三行列表"） */
+    var listBtn = el('button', 'p-music-listbtn');
+    listBtn.type = 'button';
+    listBtn.setAttribute('aria-label', '播放列表');
+    listBtn.setAttribute('aria-expanded', 'false');
+    listBtn.innerHTML =
+      '<svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">' +
+      '<path d="M4 4.1 L8.7 6.4 L4 8.7 Z" fill="currentColor"/>' +
+      '<rect x="10.2" y="5.3" width="6" height="1.7" rx="0.85" fill="currentColor"/>' +
+      '<rect x="4" y="11" width="12.2" height="1.7" rx="0.85" fill="currentColor"/>' +
+      '<rect x="4" y="15" width="12.2" height="1.7" rx="0.85" fill="currentColor"/>' +
+      '</svg>';
+    idBox.appendChild(listBtn);
+
     wrap.appendChild(barsBox);
     wrap.appendChild(line);
     wrap.appendChild(idBox);
@@ -114,7 +128,84 @@
       ceilDb = NaN;   // 换歌重置 AGC
       time.textContent = '-00:00';
       fill.style.width = '0%';
+      markActive();
     }
+
+    /* ---------- 播放列表抽屉 ---------- */
+    var drawer = null;
+
+    function markActive() {
+      if (!drawer) return;
+      var items = drawer.querySelectorAll('.p-playlist-item');
+      for (var i = 0; i < items.length; i++) {
+        items[i].classList.toggle('is-active', Number(items[i].dataset.i) === idx);
+      }
+    }
+
+    function ensureDrawer() {
+      if (drawer) return drawer;
+      drawer = el('aside', 'p-playlist');
+      drawer.setAttribute('aria-hidden', 'true');
+      drawer.setAttribute('aria-label', '播放列表');
+      drawer.innerHTML =
+        '<div class="p-playlist-head">' +
+        '<span class="p-playlist-h">播放列表</span>' +
+        '<span class="p-playlist-count"></span>' +
+        '<button type="button" class="p-playlist-close" aria-label="关闭播放列表">&times;</button>' +
+        '</div><ol class="p-playlist-list"></ol>';
+      document.body.appendChild(drawer);
+      drawer.querySelector('.p-playlist-count').textContent = tracks.length + ' 首';
+
+      var list = drawer.querySelector('.p-playlist-list');
+      tracks.forEach(function (t, i) {
+        var li = el('li');
+        var btn = el('button', 'p-playlist-item');
+        btn.type = 'button';
+        btn.dataset.i = i;
+        btn.innerHTML = '<span class="p-playlist-idx"></span>' +
+          '<span class="p-playlist-meta"><span class="p-playlist-title"></span><span class="p-playlist-artist"></span></span>';
+        btn.querySelector('.p-playlist-idx').textContent = (i + 1 < 10 ? '0' : '') + (i + 1);
+        btn.querySelector('.p-playlist-title').textContent = t.title;
+        btn.querySelector('.p-playlist-artist').textContent = t.album ? t.artist + ' · ' + t.album : t.artist;
+        btn.addEventListener('click', function () {
+          setTrack(i);
+          play();
+          markActive();
+          closeDrawer();
+        });
+        li.appendChild(btn);
+        list.appendChild(li);
+      });
+
+      drawer.querySelector('.p-playlist-close').addEventListener('click', closeDrawer);
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeDrawer(); });
+      document.addEventListener('pointerdown', function (e) {
+        if (!drawer.classList.contains('is-open')) return;
+        if (drawer.contains(e.target) || listBtn.contains(e.target)) return;
+        closeDrawer();
+      });
+      return drawer;
+    }
+
+    function openDrawer() {
+      ensureDrawer();
+      markActive();
+      drawer.classList.add('is-open');
+      drawer.setAttribute('aria-hidden', 'false');
+      listBtn.setAttribute('aria-expanded', 'true');
+    }
+
+    function closeDrawer() {
+      if (!drawer) return;
+      drawer.classList.remove('is-open');
+      drawer.setAttribute('aria-hidden', 'true');
+      listBtn.setAttribute('aria-expanded', 'false');
+    }
+
+    listBtn.addEventListener('click', function () {
+      if (drawer && drawer.classList.contains('is-open')) closeDrawer();
+      else openDrawer();
+    });
 
     /* ---------- 频谱 ---------- */
     function ensureAnalyser() {
