@@ -1433,6 +1433,7 @@ html[data-p-color-forced] *::after {
 
 .p-music-bars { display: flex; align-items: flex-end; gap: 3px; height: 72px; }
 .p-music-bars > i {
+  /* 静止高度：与 player.js 静音态的目标值对齐（noSignal 分支用的 0.20） */
   flex: 1 1 0; min-width: 2px; height: 20%; border-radius: 2px 2px 0 0;
   background: linear-gradient(to top, var(--p-accent) 0%, var(--p-accent-2) 65%, #f7eabc 100%);
   opacity: 0.55; transition: height 60ms linear, opacity 240ms ease;

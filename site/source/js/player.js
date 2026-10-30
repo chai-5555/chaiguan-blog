@@ -296,11 +296,12 @@
       /* 没有真信号时（音频还没解码出来 / 静音段 / 分析器读到的是纯底噪），
          绝不能继续走"倾斜补偿 + AGC"：底噪在每个频段都一样，加上随频率递增的
          倾斜量后就会画成一条从左到右上扬的斜坡（这就是你截图里那个形状）。
-         这里改为缓慢回落到一条矮平线，并且不动 AGC。 */
+         这里回落到"静止态"，目标高度与 CSS 里 .p-music-bars > i 的初始 20% 对齐，
+         这样"刚进站"和"点了播放但还没加载"看到的是同一种画面。 */
       var noSignal = !isFinite(dbMax) || dbMax < -90 || audio.readyState < 2;
       if (noSignal) {
         for (i = 0; i < BAR_COUNT; i++) {
-          level[i] += (0.04 - level[i]) * 0.12;
+          level[i] += (0.20 - level[i]) * 0.12;
           bars[i].style.height = Math.max(2, level[i] * 100).toFixed(1) + '%';
         }
         return;
