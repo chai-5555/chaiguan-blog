@@ -35,7 +35,7 @@
     var banner = document.getElementById('banner');
     if (!banner) return;
 
-    var idx = 0, playing = false, analyser = null, freq = null, rafId = 0, fakeMode = false, zeroSince = 0;
+    var idx = 0, playing = false, analyser = null, freq = null, level = null, refDb = null, rafId = 0, fakeMode = false, zeroSince = 0;
 
     /* ---------- DOM ---------- */
     var wrap = el('div', 'p-music');
@@ -121,14 +121,21 @@
         var ctx = new Ctx();
         var src = ctx.createMediaElementSource(audio);
         analyser = ctx.createAnalyser();
-        analyser.fftSize = 1024;
-        analyser.smoothingTimeConstant = 0.82;
+        analyser.fftSize = 2048;
+        analyser.smoothingTimeConstant = 0.62;   // 帧内平滑少一点，靠下面的攻/释放包络控制手感
         src.connect(analyser);
         analyser.connect(ctx.destination);
-        freq = new Uint8Array(analyser.frequencyBinCount);
+        freq = new Float32Array(analyser.frequencyBinCount);   // getFloatFrequencyData：dBFS，绝对值
+        level = new Float32Array(BAR_COUNT);                   // 每根柱子当前的显示电平（0–1）
+        refDb = new Float32Array(BAR_COUNT).fill(NaN);         // 每根柱子的长期参考电平（自适应，抵消频谱滚降）
       } catch (e) {
         fakeMode = true;
       }
+    }
+
+    /* 调参用探针：仅在 ?p-music-debug=1 时暴露分析器，正常访问不产生任何全局变量 */
+    if (location.search.indexOf('p-music-debug') >= 0) {
+      window.__pMusicDebug = { get analyser() { return analyser; }, get freq() { return freq; }, get level() { return level; } };
     }
 
     function paintBars(ts) {
@@ -140,33 +147,46 @@
         }
         return;
       }
-      analyser.getByteFrequencyData(freq);
-      var max = 0;
-      for (i = 0; i < freq.length; i++) if (freq[i] > max) max = freq[i];
-      if (playing && max === 0) {
+      analyser.getFloatFrequencyData(freq);   // 单位 dBFS：-100 ≈ 静音，0 = 满刻度
+      var maxDb = -Infinity;
+      for (i = 0; i < freq.length; i++) if (freq[i] > maxDb) maxDb = freq[i];
+      if (playing && maxDb < -90) {
         if (!zeroSince) zeroSince = ts;
         else if (ts - zeroSince > 1200) fakeMode = true;   // 跨域污染等情况下退化为假跳
       } else {
         zeroSince = 0;
       }
-      /* 音乐能量集中在 ~10kHz 以下（fftSize 1024 → 每 bin ≈ 47Hz），
-         取前 42% 的 bin 再按指数拉开，右端不再全空；高频段给一点补偿增益抵消频谱滚降 */
-      var usable = Math.floor(freq.length * 0.42);
-      var vals = new Array(BAR_COUNT);
-      var peak = 1;
+
+      /* 每根柱子用"自己的长期参考电平"做归一化：
+         - 参考电平追峰值很快、回落很慢（≈5 dB/秒），所以副歌会把整排推上去、
+           而安静段在参考电平回落的这几秒里明显变矮 —— 低谷/高潮就分得出来了
+         - 每根柱子各有一条参考，天然抵消音乐 50 dB 的高频滚降（实测第 0 根 p50 ≈ -57 dB，
+           第 54 根 p50 ≈ -106 dB，用同一个固定窗口必然高音区全死）
+         - 不再用"当前帧最响那根"做分母：那会把每一帧都拉满，正是此前没有起伏的原因 */
+      var RANGE = 26;                                    // 显示动态范围（dB）
+      var FALL = 0.08;                                   // 参考电平每帧回落量 ≈ 5 dB/秒
+      var usable = Math.floor(freq.length * 0.42);       // fft 2048 → 每 bin ≈ 21.5Hz，前 42% ≈ 9kHz
       for (i = 0; i < BAR_COUNT; i++) {
         var a = Math.floor(Math.pow(i / BAR_COUNT, 1.25) * usable);
         var b = Math.max(a + 1, Math.floor(Math.pow((i + 1) / BAR_COUNT, 1.25) * usable));
-        var v = 0;
-        for (var k = a; k < b && k < freq.length; k++) if (freq[k] > v) v = freq[k];  // 取峰值比均值更有起伏
-        vals[i] = v;
-        if (v > peak) peak = v;
-      }
-      for (i = 0; i < BAR_COUNT; i++) {
-        /* 逐帧归一化 + 0.7 次幂：音乐高频本来就很弱，不归一化右半边会一直贴地 */
-        var r = Math.pow(vals[i] / peak, 0.7);
-        var tilt = 0.72 + 0.36 * (i / BAR_COUNT);
-        bars[i].style.height = Math.max(2, Math.min(100, r * 100 * tilt)).toFixed(1) + '%';
+        var db = -Infinity;
+        for (var k = a; k < b && k < freq.length; k++) if (freq[k] > db) db = freq[k];
+        if (!isFinite(db)) db = -110;
+
+        var ref = refDb[i];
+        if (!isFinite(ref)) ref = db;
+        if (db > ref) ref = db;                          // 参考电平：瞬时跟涨
+        else ref = Math.max(-95, ref - FALL);            // 缓慢回落
+        refDb[i] = ref;
+
+        var target = (db - (ref - RANGE)) / RANGE;
+        target = Math.max(0, Math.min(1, target));
+        target = Math.pow(target, 1.35);                 // 拉开层次：弱段更低、强段更突出
+
+        var cur = level[i];
+        cur += (target - cur) * (target > cur ? 0.70 : 0.16);   // 快攻慢放（VU 手感）
+        level[i] = cur;
+        bars[i].style.height = Math.max(2, Math.min(100, cur * 100)).toFixed(1) + '%';
       }
     }
 
