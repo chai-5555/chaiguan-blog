@@ -1342,13 +1342,25 @@ html[data-p-color-forced] *::after {
 .p-music[hidden] { display: none; }
 .p-music > * { pointer-events: auto; }
 
+/* 每根 = 容器 + 填充(i) + 峰值残留(u)。容器定位，填充与峰值都绝对定位到底边，
+   这样"顶部的细亮线"（峰值保持）不需要额外容器层级 */
 .p-music-bars { display: flex; align-items: flex-end; gap: 3px; height: 72px; }
-.p-music-bars > i {
-  flex: 1 1 0; min-width: 2px; height: 20%; border-radius: 2px 2px 0 0;
+.p-music-bars > .p-music-bar {
+  position: relative; flex: 1 1 0; min-width: 2px; height: 100%;
+}
+.p-music-bars > .p-music-bar > i {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 20%;
+  border-radius: 2px 2px 0 0;
   background: linear-gradient(to top, var(--p-accent) 0%, var(--p-accent-2) 65%, #f7eabc 100%);
   opacity: 0.55; transition: height 60ms linear, opacity 240ms ease;
 }
-.p-music.is-playing .p-music-bars > i { opacity: 0.95; }
+.p-music-bars > .p-music-bar > u {
+  position: absolute; left: 0; right: 0; bottom: 20%; height: 2px; border-radius: 1px;
+  background: color-mix(in srgb, var(--p-accent-2) 40%, #fff);
+  opacity: 0; transition: bottom 110ms linear, opacity 220ms ease;
+}
+.p-music.is-playing .p-music-bars > .p-music-bar > i { opacity: 0.95; }
+.p-music.is-playing .p-music-bars > .p-music-bar > u { opacity: 0.55; }   /* 峰值残留：淡一点，别抢柱身 */
 
 .p-music-line { display: flex; align-items: center; gap: 1rem; }
 .p-music-track {

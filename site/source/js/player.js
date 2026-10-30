@@ -35,17 +35,25 @@
     var banner = document.getElementById('banner');
     if (!banner) return;
 
-    var idx = 0, playing = false, analyser = null, freq = null, level = null, refDb = null, rafId = 0, fakeMode = false, zeroSince = 0;
+    var idx = 0, playing = false, analyser = null, freq = null, level = null, refDb = null, peakLevel = null;
+    var bandLo = null, bandHi = null;
+    var rafId = 0, fakeMode = false, zeroSince = 0;
 
     /* ---------- DOM ---------- */
     var wrap = el('div', 'p-music');
     var barsBox = el('div', 'p-music-bars');
     barsBox.setAttribute('aria-hidden', 'true');
-    var bars = [];
+    var bars = [];      // 填充条
+    var peaks = [];     // 峰值残留（顶部那根细亮线）
     for (var i = 0; i < BAR_COUNT; i++) {
-      var bar = el('i');
-      barsBox.appendChild(bar);
-      bars.push(bar);
+      var cell = el('span', 'p-music-bar');
+      var fillEl = el('i');
+      var peakEl = el('u');
+      cell.appendChild(fillEl);
+      cell.appendChild(peakEl);
+      barsBox.appendChild(cell);
+      bars.push(fillEl);
+      peaks.push(peakEl);
     }
 
     var line = el('div', 'p-music-line');
@@ -128,6 +136,21 @@
         freq = new Float32Array(analyser.frequencyBinCount);   // getFloatFrequencyData：dBFS，绝对值
         level = new Float32Array(BAR_COUNT);                   // 每根柱子当前的显示电平（0–1）
         refDb = new Float32Array(BAR_COUNT).fill(NaN);         // 每根柱子的长期参考电平（自适应，抵消频谱滚降）
+        peakLevel = new Float32Array(BAR_COUNT);               // 峰值保持（顶部细亮线）
+
+        /* 1/N 倍频程（constant-Q）分组：每根柱子覆盖"频率比"相同的带宽，
+           而不是等宽 Hz。这样低音区分得细、高音区不浪费柱位，观感更接近专业频谱仪 */
+        var binHz = ctx.sampleRate / analyser.fftSize;
+        var fMin = 40, fMax = Math.min(16000, ctx.sampleRate / 2 * 0.9);
+        var ratioQ = Math.pow(fMax / fMin, 1 / BAR_COUNT);
+        bandLo = new Int32Array(BAR_COUNT);
+        bandHi = new Int32Array(BAR_COUNT);
+        for (var bi = 0; bi < BAR_COUNT; bi++) {
+          var f0 = fMin * Math.pow(ratioQ, bi);
+          var lo = Math.max(1, Math.round(f0 / binHz));
+          bandLo[bi] = lo;
+          bandHi[bi] = Math.min(analyser.frequencyBinCount - 1, Math.max(lo + 1, Math.round(f0 * ratioQ / binHz)));
+        }
       } catch (e) {
         fakeMode = true;
       }
@@ -163,30 +186,45 @@
          - 每根柱子各有一条参考，天然抵消音乐 50 dB 的高频滚降（实测第 0 根 p50 ≈ -57 dB，
            第 54 根 p50 ≈ -106 dB，用同一个固定窗口必然高音区全死）
          - 不再用"当前帧最响那根"做分母：那会把每一帧都拉满，正是此前没有起伏的原因 */
-      var RANGE = 26;                                    // 显示动态范围（dB）
-      var FALL = 0.08;                                   // 参考电平每帧回落量 ≈ 5 dB/秒
-      var usable = Math.floor(freq.length * 0.42);       // fft 2048 → 每 bin ≈ 21.5Hz，前 42% ≈ 9kHz
+      var RANGE = 18;                                    // 显示动态范围（dB）。注意方向：RANGE 越小对比越强
+                                                        // （target = 1 + (db-ref)/RANGE，越小 → 同样的 dB 落差扣得越狠）
       for (i = 0; i < BAR_COUNT; i++) {
-        var a = Math.floor(Math.pow(i / BAR_COUNT, 1.25) * usable);
-        var b = Math.max(a + 1, Math.floor(Math.pow((i + 1) / BAR_COUNT, 1.25) * usable));
+        var lo = bandLo ? bandLo[i] : 1;
+        var hi = bandHi ? bandHi[i] : 2;
         var db = -Infinity;
-        for (var k = a; k < b && k < freq.length; k++) if (freq[k] > db) db = freq[k];
+        for (var k = lo; k <= hi && k < freq.length; k++) if (freq[k] > db) db = freq[k];
         if (!isFinite(db)) db = -110;
+
+        var pos = i / (BAR_COUNT - 1);                   // 0 = 最低音，1 = 最高音
+        /* gravity 弹道：低音区参考电平回落慢（约 3.6 dB/s）、高音区快（约 6.6 dB/s），
+           听觉上低音"撑得住"、高音"闪一下"，这是专业频谱仪的手感来源 */
+        var fallDb = 0.06 + 0.05 * pos;
 
         var ref = refDb[i];
         if (!isFinite(ref)) ref = db;
-        if (db > ref) ref = db;                          // 参考电平：瞬时跟涨
-        else ref = Math.max(-95, ref - FALL);            // 缓慢回落
+        if (db > ref) ref = db;
+        else ref = Math.max(-95, ref - fallDb);
         refDb[i] = ref;
 
         var target = (db - (ref - RANGE)) / RANGE;
         target = Math.max(0, Math.min(1, target));
-        target = Math.pow(target, 1.35);                 // 拉开层次：弱段更低、强段更突出
+        target = Math.pow(target, 1.35);
 
+        /* 显示包络也按位置区分释放速度：低音拖尾长，高音干脆 */
+        var release = 0.10 + 0.14 * pos;
         var cur = level[i];
-        cur += (target - cur) * (target > cur ? 0.70 : 0.16);   // 快攻慢放（VU 手感）
+        cur += (target - cur) * (target > cur ? 0.72 : release);
         level[i] = cur;
+
+        /* 峰值保持：吸附到最高点后缓慢下落（≈0.5/秒，约 2 秒见底）。
+           与柱顶贴得太近时隐藏标记，避免连成一道毛边 */
+        var pk = peakLevel[i];
+        if (cur > pk) pk = cur; else pk = Math.max(0, pk - 0.009);
+        peakLevel[i] = pk;
+
         bars[i].style.height = Math.max(2, Math.min(100, cur * 100)).toFixed(1) + '%';
+        peaks[i].style.bottom = Math.min(99, pk * 100).toFixed(1) + '%';
+        peaks[i].style.opacity = (pk - cur) > 0.05 ? '' : '0';
       }
     }
 
