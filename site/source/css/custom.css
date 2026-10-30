@@ -61,6 +61,10 @@
   --p-banner-1: #4a4322;
   --p-banner-2: #2b2a16;
   --p-banner-3: #14150b;
+  /* 插画取景：115% + 底对齐 = "下移一档"（可见源图 13%–100% 高度）。
+     想更靠下：加大百分比或保持 100%；想恢复整幅：改成 cover / 62%。 */
+  --p-banner-size: auto 115%;
+  --p-banner-pos-y: 100%;
   --p-banner-glow: rgba(247, 234, 188, 0.05);
   --p-banner-glow-0: rgba(247, 234, 188, 0);
   --p-banner-sheen: rgba(247, 234, 188, 0.10);
@@ -329,8 +333,12 @@ hr {
     linear-gradient(168deg, var(--p-banner-1) 0%, var(--p-banner-2) 50%, var(--p-banner-3) 100%) !important;
   background-repeat: no-repeat !important;
   /* 第 2 层是插画：42% 62% 把人物所在点固定在容器同位置，竖屏裁切也不会把人裁掉 */
-  background-position: center, 42% 62%, center !important;
-  background-size: auto, cover, auto !important;
+  /* 纵向取景由 --p-banner-pos-y 控制：数值越小越靠上（0% = 图顶对齐容器顶）。
+     横向 42% 固定对准人物。改这一处即可整体上下取景，不必动图。 */
+  background-position: center, 42% var(--p-banner-pos-y, 62%), center !important;
+  /* 取景缩放：默认 cover（1440×1000 下整幅高度正好铺满，纵向没有裁切余地），
+     想"把画面往上挪"必须同时放大再选纵向带，故拆成 --p-banner-size / --p-banner-pos-y 两个变量 */
+  background-size: auto, var(--p-banner-size, cover), auto !important;
   will-change: transform;
 }
 
