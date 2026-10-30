@@ -35,7 +35,7 @@
     var banner = document.getElementById('banner');
     if (!banner) return;
 
-    var idx = 0, playing = false, analyser = null, freq = null, level = null, refDb = null, rafId = 0, fakeMode = false, zeroSince = 0;
+    var idx = 0, playing = false, analyser = null, freq = null, level = null, refDb = null, ceilDb = NaN, calFrames = 0, rafId = 0, fakeMode = false, zeroSince = 0;
 
     /* ---------- DOM ---------- */
     var wrap = el('div', 'p-music');
@@ -108,6 +108,7 @@
       cover.classList.toggle('is-nocover', !t.cover);
       cover.dataset.initial = (t.title || '?').trim().charAt(0).toUpperCase();
       wrap.hidden = false;
+      ceilDb = NaN;   // 换歌重置 AGC
       time.textContent = '-00:00';
       fill.style.width = '0%';
     }
@@ -127,7 +128,8 @@
         analyser.connect(ctx.destination);
         freq = new Float32Array(analyser.frequencyBinCount);   // getFloatFrequencyData：dBFS，绝对值
         level = new Float32Array(BAR_COUNT);                   // 每根柱子当前的显示电平（0–1）
-        refDb = new Float32Array(BAR_COUNT).fill(NaN);         // 每根柱子的长期参考电平（自适应，抵消频谱滚降）
+        ceilDb = NaN;                                          // 整轨校准出的窗口天花板（只校准一次）
+        calFrames = 0;
       } catch (e) {
         fakeMode = true;
       }
@@ -163,28 +165,47 @@
          - 每根柱子各有一条参考，天然抵消音乐 50 dB 的高频滚降（实测第 0 根 p50 ≈ -57 dB，
            第 54 根 p50 ≈ -106 dB，用同一个固定窗口必然高音区全死）
          - 不再用"当前帧最响那根"做分母：那会把每一帧都拉满，正是此前没有起伏的原因 */
-      var RANGE = 26;                                    // 显示动态范围（dB）
-      var FALL = 0.08;                                   // 参考电平每帧回落量 ≈ 5 dB/秒
-      var usable = Math.floor(freq.length * 0.42);       // fft 2048 → 每 bin ≈ 21.5Hz，前 42% ≈ 9kHz
+      /* —— 自研频谱 v3 ——
+         1) 等比频段 40Hz→16kHz + 常数倾斜补偿：整体形状稳定，低频厚、高频不塌
+         2) 跨柱 3 抽头平滑：相邻柱子联动，眼睛才能看出"山丘在动"而不是随机噪点
+         3) 全局慢 AGC（只动整体电平，不动柱间对比）：主歌/副歌的高低位由它给出
+         4) 快攻慢放的显示包络 */
+      var RANGE_DB = 32;                              // 窗口宽度（dB）：越窄对比越强
+      var F_MIN = 40, F_MAX = 16000;
+      var TILT = 4.0;                                 // 每倍频程补偿（dB）
+      var binHz = (analyser.context.sampleRate || 48000) / analyser.fftSize;
+      var lnRatio = Math.log(F_MAX / F_MIN);
+      var raw = new Array(BAR_COUNT);
+      var frameMax = -Infinity;
+
       for (i = 0; i < BAR_COUNT; i++) {
-        var a = Math.floor(Math.pow(i / BAR_COUNT, 1.25) * usable);
-        var b = Math.max(a + 1, Math.floor(Math.pow((i + 1) / BAR_COUNT, 1.25) * usable));
+        var f0 = F_MIN * Math.exp(lnRatio * i / BAR_COUNT);
+        var f1 = F_MIN * Math.exp(lnRatio * (i + 1) / BAR_COUNT);
+        var a2 = Math.max(1, Math.floor(f0 / binHz));
+        var b2 = Math.max(a2 + 1, Math.ceil(f1 / binHz));
         var db = -Infinity;
-        for (var k = a; k < b && k < freq.length; k++) if (freq[k] > db) db = freq[k];
+        for (var k = a2; k < b2 && k < freq.length; k++) if (freq[k] > db) db = freq[k];
         if (!isFinite(db)) db = -110;
+        var fc = Math.sqrt(f0 * f1);
+        raw[i] = db + Math.max(-20, Math.min(20, TILT * Math.log(fc / 1000) / Math.LN2));
+        if (raw[i] > frameMax) frameMax = raw[i];
+      }
 
-        var ref = refDb[i];
-        if (!isFinite(ref)) ref = db;
-        if (db > ref) ref = db;                          // 参考电平：瞬时跟涨
-        else ref = Math.max(-95, ref - FALL);            // 缓慢回落
-        refDb[i] = ref;
+      /* 全局慢 AGC：天花板跟整排峰值，跟涨 ~1s、回落 ~12s（慢到不会把副歌压回主歌的高度） */
+      if (!isFinite(ceilDb)) ceilDb = frameMax;
+      ceilDb += (frameMax - ceilDb) * (frameMax > ceilDb ? 0.08 : 0.010);
+      var floorDb = ceilDb - RANGE_DB;
 
-        var target = (db - (ref - RANGE)) / RANGE;
+      /* 跨柱平滑：raw → 3 抽头加权，[1,2,1]/4 */
+      for (i = 0; i < BAR_COUNT; i++) {
+        var prev = raw[Math.max(0, i - 1)];
+        var next = raw[Math.min(BAR_COUNT - 1, i + 1)];
+        var sm = (prev + 2 * raw[i] + next) / 4;
+
+        var target = (sm - floorDb) / RANGE_DB;
         target = Math.max(0, Math.min(1, target));
-        target = Math.pow(target, 1.35);                 // 拉开层次：弱段更低、强段更突出
-
         var cur = level[i];
-        cur += (target - cur) * (target > cur ? 0.70 : 0.16);   // 快攻慢放（VU 手感）
+        cur += (target - cur) * (target > cur ? 0.60 : 0.16);
         level[i] = cur;
         bars[i].style.height = Math.max(2, Math.min(100, cur * 100)).toFixed(1) + '%';
       }
