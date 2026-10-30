@@ -169,8 +169,14 @@ hexo.extend.generator.register('music_playlist', function () {
       }
     }
 
+    /* 内容指纹版 URL：和网易云 web 播放器同一套思路 ——
+       他们给音频 1 年 max-age，靠 CDN 路径里的 hash 段来"自动换 URL"；
+       我们没法改 CDN 路径，就在查询串里放文件内容的前 8 位 sha1。
+       换歌（同名覆盖）→ 指纹变 → URL 变 → 立刻生效；没换 → 一年都能吃缓存。 */
+    const fileHash = crypto.createHash('sha1').update(fs.readFileSync(abs)).digest('hex').slice(0, 8);
+
     tracks.push({
-      src: '/audio/' + encodeURIComponent(file),
+      src: '/audio/' + encodeURIComponent(file) + '?v=' + fileHash,
       title: id3.title || humanize(base),
       artist: id3.artist || '未知艺术家',
       album: id3.album || '',
