@@ -35,13 +35,18 @@
     var banner = document.getElementById('banner');
     if (!banner) return;
 
-    var idx = 0, playing = false, analyser = null, freq = null, level = null, gate = NaN, rafId = 0, fakeMode = false, zeroSince = 0;
+    var idx = 0, playing = false, analyser = null, freq = null, level = null, refDb = null, rafId = 0, fakeMode = false, zeroSince = 0;
 
     /* ---------- DOM ---------- */
     var wrap = el('div', 'p-music');
     var barsBox = el('div', 'p-music-bars');
     barsBox.setAttribute('aria-hidden', 'true');
-    /* 频谱交给 audioMotion 的 canvas 渲染，这里不再自建柱子 */
+    var bars = [];
+    for (var i = 0; i < BAR_COUNT; i++) {
+      var bar = el('i');
+      barsBox.appendChild(bar);
+      bars.push(bar);
+    }
 
     var line = el('div', 'p-music-line');
     var track = el('div', 'p-music-track');
@@ -108,57 +113,86 @@
     }
 
     /* ---------- 频谱 ---------- */
-    /* —— 频谱：audioMotion-analyzer（v4.5.4，AGPL-3.0-or-later）——
-       它自带 AudioContext + canvas 渲染 + 对数频段 + 峰值残留；
-       我们只做三件事：给容器、注册站内渐变、跟着播放/暂停 start/stop。
-       未加载到库时静默降级（只留进度条，不报错）。 */
-    var am = null;
-
-    function ensureAnalyzer() {
-      if (am || !window.AudioMotionAnalyzer) return;
+    function ensureAnalyser() {
+      if (analyser) { if (analyser.context.state === 'suspended') analyser.context.resume(); return; }
+      var Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) { fakeMode = true; return; }
       try {
-        am = new window.AudioMotionAnalyzer(barsBox, {
-          mode: 4,                 // 1/6 倍频程（40Hz–16kHz 约 52 根柱，接近参考图密度）
-          frequencyScale: 'log',
-          minFreq: 40,
-          maxFreq: 16000,
-          fftSize: 4096,
-          smoothing: 0.78,
-          barSpace: 0.25,
-          showPeaks: true,
-          peakHoldTime: 320,
-          minDecibels: -64,        // dB 窗口：柱子吃满高度又不至于整排顶格
-          maxDecibels: -18,
-          // audioMotion 只有在 showBgColor 为真时才用自定义 bgColor，否则写死画 '#000'
-          showBgColor: true,
-          bgColor: 'rgba(0,0,0,0)', // 透明底：canvas 只画柱子，露出插画
-          bgAlpha: 0,
-          alphaBars: false,
-          ledBars: false,
-          showScaleX: false,
-          showScaleY: false,
-          showFPS: false,
-          connectSpeakers: true
-        });
-        am.registerGradient('chaiguan', {
-          // 填充用 bgColor 兜底；透明必须写在这里，构造参数里的 bgColor 只对内置渐变生效
-          bgColor: 'rgba(0,0,0,0)',
-          colorStops: [
-            { pos: 0, color: '#a55a2a' },
-            { pos: 0.55, color: '#c9894f' },
-            { pos: 1, color: '#f7eabc' }
-          ]
-        });
-        am.setOptions({ colorMode: 'gradient', gradient: 'chaiguan' });
-        am.connectInput(audio);
+        var ctx = new Ctx();
+        var src = ctx.createMediaElementSource(audio);
+        analyser = ctx.createAnalyser();
+        analyser.fftSize = 2048;
+        analyser.smoothingTimeConstant = 0.62;   // 帧内平滑少一点，靠下面的攻/释放包络控制手感
+        src.connect(analyser);
+        analyser.connect(ctx.destination);
+        freq = new Float32Array(analyser.frequencyBinCount);   // getFloatFrequencyData：dBFS，绝对值
+        level = new Float32Array(BAR_COUNT);                   // 每根柱子当前的显示电平（0–1）
+        refDb = new Float32Array(BAR_COUNT).fill(NaN);         // 每根柱子的长期参考电平（自适应，抵消频谱滚降）
       } catch (e) {
-        am = null;
-        barsBox.classList.add('is-fallback');
+        fakeMode = true;
+      }
+    }
+
+    /* 调参用探针：仅在 ?p-music-debug=1 时暴露分析器，正常访问不产生任何全局变量 */
+    if (location.search.indexOf('p-music-debug') >= 0) {
+      window.__pMusicDebug = { get analyser() { return analyser; }, get freq() { return freq; }, get level() { return level; } };
+    }
+
+    function paintBars(ts) {
+      var i, h;
+      if (fakeMode) {
+        for (i = 0; i < BAR_COUNT; i++) {
+          h = (Math.sin(ts / 520 + i * 0.7) * 0.5 + 0.5) * (0.45 + 0.55 * Math.sin(ts / 1400 + i * 0.31));
+          bars[i].style.height = Math.max(2, h * 100).toFixed(1) + '%';
+        }
+        return;
+      }
+      analyser.getFloatFrequencyData(freq);   // 单位 dBFS：-100 ≈ 静音，0 = 满刻度
+      var maxDb = -Infinity;
+      for (i = 0; i < freq.length; i++) if (freq[i] > maxDb) maxDb = freq[i];
+      if (playing && maxDb < -90) {
+        if (!zeroSince) zeroSince = ts;
+        else if (ts - zeroSince > 1200) fakeMode = true;   // 跨域污染等情况下退化为假跳
+      } else {
+        zeroSince = 0;
+      }
+
+      /* 每根柱子用"自己的长期参考电平"做归一化：
+         - 参考电平追峰值很快、回落很慢（≈5 dB/秒），所以副歌会把整排推上去、
+           而安静段在参考电平回落的这几秒里明显变矮 —— 低谷/高潮就分得出来了
+         - 每根柱子各有一条参考，天然抵消音乐 50 dB 的高频滚降（实测第 0 根 p50 ≈ -57 dB，
+           第 54 根 p50 ≈ -106 dB，用同一个固定窗口必然高音区全死）
+         - 不再用"当前帧最响那根"做分母：那会把每一帧都拉满，正是此前没有起伏的原因 */
+      var RANGE = 26;                                    // 显示动态范围（dB）
+      var FALL = 0.08;                                   // 参考电平每帧回落量 ≈ 5 dB/秒
+      var usable = Math.floor(freq.length * 0.42);       // fft 2048 → 每 bin ≈ 21.5Hz，前 42% ≈ 9kHz
+      for (i = 0; i < BAR_COUNT; i++) {
+        var a = Math.floor(Math.pow(i / BAR_COUNT, 1.25) * usable);
+        var b = Math.max(a + 1, Math.floor(Math.pow((i + 1) / BAR_COUNT, 1.25) * usable));
+        var db = -Infinity;
+        for (var k = a; k < b && k < freq.length; k++) if (freq[k] > db) db = freq[k];
+        if (!isFinite(db)) db = -110;
+
+        var ref = refDb[i];
+        if (!isFinite(ref)) ref = db;
+        if (db > ref) ref = db;                          // 参考电平：瞬时跟涨
+        else ref = Math.max(-95, ref - FALL);            // 缓慢回落
+        refDb[i] = ref;
+
+        var target = (db - (ref - RANGE)) / RANGE;
+        target = Math.max(0, Math.min(1, target));
+        target = Math.pow(target, 1.35);                 // 拉开层次：弱段更低、强段更突出
+
+        var cur = level[i];
+        cur += (target - cur) * (target > cur ? 0.70 : 0.16);   // 快攻慢放（VU 手感）
+        level[i] = cur;
+        bars[i].style.height = Math.max(2, Math.min(100, cur * 100)).toFixed(1) + '%';
       }
     }
 
     function loop(ts) {
       rafId = requestAnimationFrame(loop);
+      if (analyser || fakeMode) paintBars(ts);
       var d = audio.duration;
       if (isFinite(d) && d > 0) {
         var pct = Math.min(100, (audio.currentTime / d) * 100);
@@ -177,8 +211,7 @@
 
     /* ---------- 播放控制 ---------- */
     function play() {
-      ensureAnalyzer();
-      if (am) am.start();
+      ensureAnalyser();
       var p = audio.play();
       if (p && p.catch) p.catch(function () { playing = false; wrap.classList.remove('is-playing'); });
       playing = true;
@@ -187,7 +220,6 @@
     }
     function pause() {
       audio.pause();
-      if (am) am.stop();
       playing = false;
       wrap.classList.remove('is-playing');
       if (REDUCE) stopLoop();
