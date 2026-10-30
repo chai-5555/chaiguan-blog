@@ -496,17 +496,33 @@ hr {
   color: var(--p-banner-ink);
 }
 
-/* 自绘箭头：覆盖 iconfont 的字符内容，改画 45° 的 V 形边框（加粗到 3px） */
-.scroll-down-bar i.iconfont::before {
-  content: "" !important;
-  display: block;
+/* 图标彻底不用字体：把 <i> 隐藏掉，V 形改画在 .scroll-down-bar 的伪元素上。
+   这样即使 CDN 里的 iconfont 规则覆盖了 content（会露出一根"箭杆"竖线），也不可能再画出来。 */
+.scroll-down-bar i.iconfont {
+  display: none !important;
+}
+
+.scroll-down-bar::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
   width: 0.8em;
   height: 0.8em;
-  margin: 0 auto;
-  border-right: 3px solid currentColor;
-  border-bottom: 3px solid currentColor;
+  margin-left: -0.4em;
+  margin-top: -0.4em;
+  border-right: 3px solid #fff;
+  border-bottom: 3px solid #fff;
   border-radius: 1px;
-  transform: rotate(45deg);
+  transform: translate(0, 0) rotate(45deg);
+  filter: drop-shadow(0 1px 2px rgba(9, 11, 5, 0.9)) drop-shadow(0 0 6px rgba(9, 11, 5, 0.75));
+  animation: p-scroll-down-tight 1.5s ease-in-out infinite;
+  z-index: 1;
+}
+
+/* audio 元素本身也彻底不渲染（避免任何原生控件/焦点框冒出来） */
+.p-music audio {
+  display: none !important;
 }
 
 /* 有播放器时幅度收小：整段活动范围不能碰到进度条 */
@@ -514,10 +530,12 @@ hr {
   animation-name: p-scroll-down-tight;
 }
 
+/* 注意：这里必须动 transform 而不是 top —— 元素靠 top:50% 居中，
+   若动画写 top 会把居中覆盖掉，箭头直接跳出面板 */
 @keyframes p-scroll-down-tight {
-  0% { top: 0; opacity: 0.9; }
-  50% { top: -0.35em; opacity: 0.55; }
-  100% { top: 0; opacity: 0.9; }
+  0% { transform: translate(0, 0) rotate(45deg); opacity: 0.9; }
+  50% { transform: translate(0, -0.35em) rotate(45deg); opacity: 0.55; }
+  100% { transform: translate(0, 0) rotate(45deg); opacity: 0.9; }
 }
 
 @keyframes p-scroll-down {
@@ -1374,7 +1392,7 @@ html[data-p-color-forced] *::after {
    面板高度由内容决定：改字号/内边距后要重量一次（recon/verify_arrow_focus.mjs 可量 gapToPanel）。 */
 #banner.has-music .scroll-down-bar {
   display: block;
-  bottom: 6px !important;    /* 再下压 6px：弹动最高点(≈11px)后仍与进度条留 ~6px 余量 */
+  bottom: 28px !important;   /* 字形中心落在面板底排中部（y≈924），离进度条 ~41px */
 }
 
 /* 圆形暗底：让箭头在任何亮/暗画面上都有稳定的对比底 */
@@ -1399,7 +1417,7 @@ html[data-p-color-forced] *::after {
 
 @media (max-width: 767px) {
   #banner.has-music .scroll-down-bar {
-    bottom: 0px !important;    /* 移动端：面板底排只有 ~83px 可用，箭头再往下压一格才不碰进度条 */
+    bottom: 38px !important;   /* 移动端：字形中心 y≈304（底排中部） */
   }
 }
 
