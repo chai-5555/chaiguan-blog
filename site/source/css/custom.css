@@ -496,16 +496,28 @@ hr {
   color: var(--p-banner-ink);
 }
 
-/* 自绘箭头：覆盖 iconfont 的字符内容，改画 45° 的 V 形边框 */
+/* 自绘箭头：覆盖 iconfont 的字符内容，改画 45° 的 V 形边框（加粗到 3px） */
 .scroll-down-bar i.iconfont::before {
   content: "" !important;
   display: block;
-  width: 0.7em;
-  height: 0.7em;
+  width: 0.8em;
+  height: 0.8em;
   margin: 0 auto;
-  border-right: 2px solid currentColor;
-  border-bottom: 2px solid currentColor;
+  border-right: 3px solid currentColor;
+  border-bottom: 3px solid currentColor;
+  border-radius: 1px;
   transform: rotate(45deg);
+}
+
+/* 有播放器时幅度收小：整段活动范围不能碰到进度条 */
+#banner.has-music .scroll-down-bar i.iconfont {
+  animation-name: p-scroll-down-tight;
+}
+
+@keyframes p-scroll-down-tight {
+  0% { top: 0; opacity: 0.9; }
+  50% { top: -0.35em; opacity: 0.55; }
+  100% { top: 0; opacity: 0.9; }
 }
 
 @keyframes p-scroll-down {
@@ -1355,14 +1367,14 @@ html[data-p-color-forced] *::after {
    18. 首屏音乐模块（js/player.js 注入到 #banner 内）
        布局对齐参考图：频谱条 → 进度条 + 剩余时间 → 封面 + 曲目信息
    ============================================================================= */
-/* 下滑箭头：有播放器时要复原，但不能压在播放器上 ——
-   抬到面板上沿之上（面板 bottom 44px + 高 182px + 10px 间隙 = 236px）。
-   面板高度由内容决定：改播放器字号/内边距后，这两个数要跟着量一次。 */
-/* 注意：上一条 .scroll-down-bar 的 bottom 带 !important（为了压过主题内联值），
-   这里也必须 !important，否则被它覆盖，箭头会落在进度条上 */
+/* 下滑箭头：放在播放器面板的底排（进度条下方、封面与曲目信息的右侧空档），
+   横向居中。bottom 值是按面板几何量出来的：
+     桌面  进度条 y≈868 | 面板底排 y≈892–956 → 箭头字形落 ~924
+     移动端 进度条 y≈261 | 底排 y≈280–328 → 箭头字形落 ~304
+   面板高度由内容决定：改字号/内边距后要重量一次（recon/verify_arrow_focus.mjs 可量 gapToPanel）。 */
 #banner.has-music .scroll-down-bar {
   display: block;
-  bottom: 236px !important;
+  bottom: 6px !important;    /* 再下压 6px：弹动最高点(≈11px)后仍与进度条留 ~6px 余量 */
 }
 
 /* 圆形暗底：让箭头在任何亮/暗画面上都有稳定的对比底 */
@@ -1387,7 +1399,7 @@ html[data-p-color-forced] *::after {
 
 @media (max-width: 767px) {
   #banner.has-music .scroll-down-bar {
-    bottom: 199px !important;   /* 44 + 147（移动端面板高）+ 8 */
+    bottom: 0px !important;    /* 移动端：面板底排只有 ~83px 可用，箭头再往下压一格才不碰进度条 */
   }
 }
 
