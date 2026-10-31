@@ -1876,25 +1876,3 @@ html[data-p-color-forced] *::after {
     bottom: 88px !important;
   }
 }
-
-/* =============================================================================
-   26. 手机端专用插画（3:4 竖版）：桌面继续用横版，手机换图；cover 满铺不留色带
-   ============================================================================= */
-@media (max-width: 767px) {
-  html.p-home #banner {
-    --p-banner-art: url('/img/banner-portrait.jpg');
-    /* 按宽度铺满 + 底部对齐：竖版插画整幅可见（390x521）并贴在地面线上，
-       上方交给底色渐变 —— 读起来是「夜色 + 海报」，不是上下夹一条亮带 */
-    background-size: auto, auto 80%, auto !important;
-    background-position: center, center bottom, center !important;
-    /* 底部缓收压到 13%：否则会把画面下半（草地/少女）洗成奶油色 */
-    background-image:
-      linear-gradient(to top,
-        var(--p-bg) 0%,
-        color-mix(in srgb, var(--p-bg) 62%, transparent) 5%,
-        color-mix(in srgb, var(--p-bg) 26%, transparent) 9%,
-        transparent 13%),
-      var(--p-banner-art),
-      linear-gradient(168deg, var(--p-banner-1) 0%, var(--p-banner-2) 50%, var(--p-banner-3) 100%) !important;
-  }
-}
