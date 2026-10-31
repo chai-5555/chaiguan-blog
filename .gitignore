@@ -21,3 +21,6 @@ Thumbs.db
 
 # 用户投递的原始素材（已拷进 site/source/audio，避免仓库双份）
 music/
+
+# 原始插画素材（大文件，只保留在本地；站点用的成品是 site/source/img/*.jpg）
+图片/青年篇/

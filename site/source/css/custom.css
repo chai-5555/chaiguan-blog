@@ -1901,3 +1901,55 @@ html[data-p-color-forced] *::after {
     ) !important;
   }
 }
+
+/* =============================================================================
+   27. 手机端：小圆钮改用封面图 + 播放时才呼吸；下滑箭头加深色圆底；
+        插画在手机端全站统一（首页与内页同一张 9:16）
+   ============================================================================= */
+@media (max-width: 767px) {
+  /* 手机端所有页面统一用竖版插画（原规则只作用于首页，这里放开） */
+  #banner {
+    --p-banner-art: url('/img/banner-mobile.jpg');
+  }
+
+  /* 小圆钮：52px 圆形封面 */
+  .p-music-fab {
+    width: 52px; height: 52px; padding: 0;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--p-ink) 24%, transparent);
+    background: var(--p-surface);
+    box-shadow: 0 8px 22px rgba(9, 11, 5, 0.28);
+  }
+  .p-music-fab-art {
+    display: block; width: 100%; height: 100%;
+    object-fit: cover;
+  }
+  .p-music-fab.is-nocover .p-music-fab-art { display: none; }
+  .p-music-fab.is-nocover::before {
+    content: attr(data-initial);
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.15rem; font-weight: 600;
+    color: var(--p-accent-text);
+    background: color-mix(in srgb, var(--p-accent) 20%, var(--p-surface));
+  }
+
+  /* 呼吸环：未播放时完全不呼吸 */
+  .p-music-fab::after { animation: none !important; box-shadow: none !important; }
+  html.p-music-collapsed.p-music-playing .p-music-fab::after {
+    animation: p-fab-breathe 1.9s ease-out infinite !important;
+  }
+
+  /* 下滑箭头：在明亮插画上真的看得见（加深色圆底 + 更强投影） */
+  #banner.has-music .scroll-down-bar::after {
+    width: 3.5rem; height: 3.5rem;
+    background: radial-gradient(circle,
+      rgba(9, 11, 5, 0.58) 0%,
+      rgba(9, 11, 5, 0.46) 52%,
+      rgba(9, 11, 5, 0) 76%);
+  }
+  #banner.has-music .scroll-down-bar {
+    bottom: 96px !important;    /* 让开常驻小圆钮（52px + 边距） */
+  }
+}

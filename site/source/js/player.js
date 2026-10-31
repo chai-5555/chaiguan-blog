@@ -165,10 +165,33 @@
       fab.type = 'button';
       fab.setAttribute('aria-label', '显示播放条');
       fab.setAttribute('aria-hidden', 'true');
-      fab.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      var art = document.createElement('img');
+      art.className = 'p-music-fab-art';
+      art.alt = '';
+      art.decoding = 'async';
+      fab.appendChild(art);
       fab.addEventListener('click', function () { setCollapsed(false); });
       document.body.appendChild(fab);
+      syncFabArt();
       return fab;
+    }
+
+    /* 小圆按钮的图案 = 当前曲目封面；没有封面就退化成首字母底色块 */
+    function syncFabArt() {
+      if (!fab) return;
+      var t = tracks[idx];
+      var art = fab.querySelector('.p-music-fab-art');
+      if (!art) return;
+      if (t && t.cover) {
+        art.src = t.cover;
+        art.alt = t.title || '';
+        fab.classList.remove('is-nocover');
+      } else {
+        art.removeAttribute('src');
+        art.alt = '';
+        fab.classList.add('is-nocover');
+        fab.setAttribute('data-initial', ((t && t.title) || '?').trim().charAt(0).toUpperCase());
+      }
     }
 
     function setCollapsed(on, silent) {
@@ -177,8 +200,7 @@
       if (on) ensureFab();
       if (fab) fab.setAttribute('aria-hidden', on ? 'false' : 'true');
       try {
-        if (on) sessionStorage.setItem(STORE_KEY, '1');
-        else sessionStorage.removeItem(STORE_KEY);
+        sessionStorage.setItem(STORE_KEY, on ? '1' : '0');   // 记住用户的选择（含"展开"）
       } catch (e) { /* 隐私模式禁用存储时忽略 */ }
       if (!silent && expandBtn) {
         expandBtn.setAttribute('aria-label', '收起播放条');
@@ -193,10 +215,14 @@
     expandBtn.addEventListener('click', function () { setCollapsed(true); });
     actions.appendChild(expandBtn);
 
-    /* 启动时恢复上次的收起状态（silent：不要动画，避免闪一下） */
+    /* 启动状态：手机端默认就是"收起"（首屏只露出封面小圆钮，播放条要点开才出现）；
+       用户手动展开过就记住，下次仍展开。 */
     try {
-      if (sessionStorage.getItem(STORE_KEY) === '1' && isMobile()) setCollapsed(true, true);
-    } catch (e) {}
+      var stored = sessionStorage.getItem(STORE_KEY);
+      setCollapsed(isMobile() ? stored !== '0' : false, true);
+    } catch (e) {
+      setCollapsed(isMobile(), true);
+    }
 
     window.addEventListener('resize', function () {
       if (!isMobile() && document.documentElement.classList.contains('p-music-collapsed')) setCollapsed(false, true);
@@ -228,6 +254,7 @@
       }
       cover.classList.toggle('is-nocover', !t.cover);
       cover.dataset.initial = (t.title || '?').trim().charAt(0).toUpperCase();
+      syncFabArt();
       wrap.hidden = false;
       ceilDb = NaN;   // 换歌重置 AGC
       time.textContent = '-00:00';
@@ -474,12 +501,14 @@
       if (p && p.catch) p.catch(function () { playing = false; wrap.classList.remove('is-playing'); });
       playing = true;
       wrap.classList.add('is-playing');
+      document.documentElement.classList.add('p-music-playing');   // 只有真正在播时，小圆钮才呼吸
       startLoop();
     }
     function pause() {
       audio.pause();
       playing = false;
       wrap.classList.remove('is-playing');
+      document.documentElement.classList.remove('p-music-playing');
       if (REDUCE) stopLoop();
     }
 
