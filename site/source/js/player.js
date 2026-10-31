@@ -32,8 +32,15 @@
     });
 
   function mount(tracks) {
-    var banner = document.getElementById('banner');
-    if (!banner) return;
+    /* 播放器挂在 <body> 的常驻宿主里，而不是 #banner 内部 ——
+       router.js 只替换 <header>/<main>，所以切页时这个宿主和 <audio> 都不会被销毁，
+       音乐可以跨页继续播。 */
+    var host = document.getElementById('p-music-host');
+    if (!host) {
+      host = el('div', 'p-music-host');
+      host.id = 'p-music-host';
+      document.body.appendChild(host);
+    }
 
     var idx = 0, hasPlayed = false, playing = false, analyser = null, freq = null, level = null, refDb = null, ceilDb = NaN, calFrames = 0, rafId = 0, fakeMode = false, zeroSince = 0;
     var FLOOR = 0.10;   // 柱高基数（0.10 = 最矮 10%）：必须在 mount 作用域，paintBars 与 paintIdle 都要用
@@ -96,8 +103,32 @@
     wrap.appendChild(line);
     wrap.appendChild(idBox);
     wrap.hidden = true;
-    banner.appendChild(wrap);
-    banner.classList.add('has-music');   // 播放器占底边时收起下滑箭头（见 custom.css §18）
+    host.appendChild(wrap);
+
+    /* 首页有 #banner 时打上 has-music（决定下滑箭头的位置，见 custom.css §18）。
+       切页后 header 被替换，所以每次 pm:page 都要重新打一次。 */
+    function syncBannerFlag() {
+      var b = document.getElementById('banner');
+      if (b) b.classList.add('has-music');
+    }
+    syncBannerFlag();
+    document.addEventListener('pm:page', syncBannerFlag);
+
+    /* 什么时候收成迷你条：
+       ① 不在首页 —— 只有首页才有整屏插画可当底，其他页面盖在正文上会挡住阅读
+       ② 首页但已滚过 banner —— 同理，插画滚走了就别再浮着大面板 */
+    function isHome() {
+      return location.pathname === '/' || /\/index\.html$/.test(location.pathname);
+    }
+    function syncCompact() {
+      var b = document.getElementById('banner');
+      var limit = b ? b.getBoundingClientRect().height - 140 : 0;
+      var compact = !isHome() || window.pageYOffset > limit;
+      document.documentElement.classList.toggle('p-music-compact', compact);
+    }
+    window.addEventListener('scroll', syncCompact, { passive: true });
+    document.addEventListener('pm:page', syncCompact);
+    syncCompact();
 
     /* ---------- audio ---------- */
     var audio = new Audio();

@@ -1640,3 +1640,39 @@ html[data-p-color-forced] *::after {
 @media (prefers-reduced-motion: reduce) {
   .p-playlist { transition: none; }
 }
+
+/* =============================================================================
+   20. 常驻播放器宿主（router.js 跨页导航时不被替换）+ 滚过首屏后的迷你条
+   ============================================================================= */
+.p-music-host {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  z-index: 900;                 /* 压在页面内容上、抽屉(1050)与导航条之下 */
+  pointer-events: none;         /* 宿主本身不吃点击，只有面板可交互 */
+}
+.p-music-host .p-music { pointer-events: auto; }
+
+/* 迷你条：非首页、或首页已滚过插画 —— 必须不透明，盖在正文上才不脏 */
+.p-music-compact .p-music {
+  width: auto;                  /* 不继承桌面端的 min(1110px,…)，否则右侧会被裁 */
+  max-width: 380px;
+  margin: 0 1.25rem 1rem auto;
+  padding: .5rem .65rem;
+  display: block;
+  bottom: 0;
+  background: var(--p-surface);
+  border: 1px solid var(--p-line);
+  border-radius: 14px;
+  box-shadow: 0 10px 26px rgba(9, 11, 5, 0.18);
+}
+.p-music-compact .p-music-bars,
+.p-music-compact .p-music-line { display: none; }
+.p-music-compact .p-music-id { gap: .6rem; }
+.p-music-compact .p-music-cover { width: 40px; height: 40px; }
+.p-music-compact .p-music-title { font-size: .875rem; }
+.p-music-compact .p-music-artist { font-size: .75rem; }
+.p-music-compact .p-music-listbtn { width: 34px; height: 34px; border-radius: 10px; }
+
+@media (max-width: 767px) {
+  .p-music-compact .p-music { max-width: calc(100% - 1.5rem); margin: 0 .75rem .75rem auto; }
+}
