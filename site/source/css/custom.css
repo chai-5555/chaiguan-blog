@@ -1876,3 +1876,38 @@ html[data-p-color-forced] *::after {
     bottom: 88px !important;
   }
 }
+
+/* =============================================================================
+   26. 手机首页：插画改为「顶部完整显示 + 下方深色带」
+        竖屏满屏 cover 只能看到原图 29% 的宽度（人物必被裁），所以改成 contain；
+        位置贴顶 → 深色带只留在下方（与 banner 底色一致，看不出接缝）。
+   ============================================================================= */
+@media (max-width: 767px) {
+  html.p-home #banner {
+    background-size: auto, contain, auto !important;
+    background-position: 50% 50%, 50% 0%, 50% 50% !important;
+  }
+}
+
+/* A 方案微调：插画按宽度放大 25% —— 画面更满，只裁掉左右各 ~7% 的边角（人物仍在画面内） */
+@media (max-width: 767px) {
+  html.p-home #banner {
+    background-size: auto, 125% auto, auto !important;
+    background-position: 50% 50%, 50% 0%, 50% 50% !important;
+  }
+}
+
+/* A 方案：插画下边缘与深色带之间做一段柔化过渡，消除那条硬接缝
+   （用主题自带的 .mask 层承载，避免再引入伪元素） */
+@media (max-width: 767px) {
+  html.p-home #banner .mask {
+    background: linear-gradient(
+      180deg,
+      rgba(43, 42, 22, 0) 0%,
+      rgba(43, 42, 22, 0) 31%,
+      rgba(43, 42, 22, 0.92) 39%,
+      var(--p-banner-2) 47%,
+      var(--p-banner-2) 100%
+    ) !important;
+  }
+}
