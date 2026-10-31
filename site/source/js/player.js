@@ -35,7 +35,8 @@
     var banner = document.getElementById('banner');
     if (!banner) return;
 
-    var idx = 0, playing = false, analyser = null, freq = null, level = null, refDb = null, ceilDb = NaN, calFrames = 0, rafId = 0, fakeMode = false, zeroSince = 0;
+    var idx = 0, hasPlayed = false, playing = false, analyser = null, freq = null, level = null, refDb = null, ceilDb = NaN, calFrames = 0, rafId = 0, fakeMode = false, zeroSince = 0;
+    var FLOOR = 0.10;   // 柱高基数（0.10 = 最矮 10%）：必须在 mount 作用域，paintBars 与 paintIdle 都要用
 
     /* ---------- DOM ---------- */
     var wrap = el('div', 'p-music');
@@ -249,14 +250,6 @@
         return;
       }
       analyser.getFloatFrequencyData(freq);   // 单位 dBFS：-100 ≈ 静音，0 = 满刻度
-      var maxDb = -Infinity;
-      for (i = 0; i < freq.length; i++) if (freq[i] > maxDb) maxDb = freq[i];
-      if (playing && !audio.ended && audio.currentTime > 0.2 && maxDb < -90) {
-        if (!zeroSince) zeroSince = ts;
-        else if (ts - zeroSince > 1200) fakeMode = true;   // 跨域污染等情况下退化为假跳
-      } else {
-        zeroSince = 0;
-      }
 
       /* 每根柱子用"自己的长期参考电平"做归一化：
          - 参考电平追峰值很快、回落很慢（≈5 dB/秒），所以副歌会把整排推上去、
@@ -298,10 +291,16 @@
          倾斜量后就会画成一条从左到右上扬的斜坡（这就是你截图里那个形状）。
          这里回落到"静止态"，目标高度与 CSS 里 .p-music-bars > i 的初始 20% 对齐，
          这样"刚进站"和"点了播放但还没加载"看到的是同一种画面。 */
-      var noSignal = !isFinite(dbMax) || dbMax < -90 || audio.readyState < 2;
-      if (noSignal) {
+      /* 两种"没内容"要分开：
+         ① 还没解码出数据（readyState<2）→ 20% 平线，跟刚进站/点了播放还没加载时一致
+         ② 真的在播但这一段没声音（前奏空档、尾音）→ 落到 FLOOR（10%）平线
+         两种都保持 flat、不动 AGC，也**不再切随机动画** */
+      var notLoaded = audio.readyState < 2;
+      var silent = !notLoaded && (!isFinite(dbMax) || dbMax < -92);
+      if (notLoaded || silent) {
+        var rest = notLoaded ? 0.20 : FLOOR;
         for (i = 0; i < BAR_COUNT; i++) {
-          level[i] += (0.20 - level[i]) * 0.12;
+          level[i] += (rest - level[i]) * 0.12;
           bars[i].style.height = Math.max(2, level[i] * 100).toFixed(1) + '%';
         }
         return;
@@ -328,13 +327,25 @@
         var cur = level[i];
         cur += (target - cur) * (target > cur ? 0.60 : 0.16);
         level[i] = cur;
-        bars[i].style.height = Math.max(2, Math.min(100, cur * 100)).toFixed(1) + '%';
+        bars[i].style.height = Math.max(2, Math.min(100, (FLOOR + cur * (1 - FLOOR)) * 100)).toFixed(1) + '%';
+      }
+    }
+
+    /* 进站未播放的占位动画：柔和的正弦叠加（不是频谱，纯装饰）。
+       一旦播放过（hasPlayed）就永久不再使用——这正是之前那个 bug 的根因。 */
+    function paintIdle(ts) {
+      for (var i = 0; i < BAR_COUNT; i++) {
+        var base = Math.sin(ts / 900 + i * 0.55) * 0.5 + 0.5;
+        var wave = Math.sin(ts / 2100 + i * 0.21) * 0.5 + 0.5;
+        var v = base * 0.55 + wave * 0.45;
+        bars[i].style.height = Math.max(2, (FLOOR + v * (1 - FLOOR) * 0.55) * 100).toFixed(1) + '%';
       }
     }
 
     function loop(ts) {
       rafId = requestAnimationFrame(loop);
-      if (playing) paintBars(ts);      // 暂停后停在一帧，不再重绘
+      if (playing) paintBars(ts);            // 暂停后停在一帧，不再重绘
+      else if (!hasPlayed) paintIdle(ts);    // 进站未播放：柔和占位动画
       var d = audio.duration;
       if (isFinite(d) && d > 0) {
         var pct = Math.min(100, (audio.currentTime / d) * 100);
@@ -353,6 +364,7 @@
 
     /* ---------- 播放控制 ---------- */
     function play() {
+      hasPlayed = true;
       resetFake();
       ensureAnalyser();
       var p = audio.play();
@@ -401,6 +413,7 @@
     });
 
     setTrack(0);
+    if (!REDUCE) startLoop();   // 进站就开始占位动画（浏览器在标签页隐藏时会自动节流 rAF）
     if (REDUCE) {
       // 减少动效：不跑 rAF，条形固定中位，只在 timeupdate 里更新进度
       bars.forEach(function (b, i) { b.style.height = (30 + ((i * 37) % 40)) + '%'; });
