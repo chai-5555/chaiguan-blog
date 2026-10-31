@@ -1876,3 +1876,14 @@ html[data-p-color-forced] *::after {
     bottom: 88px !important;
   }
 }
+
+/* =============================================================================
+   26. 手机首页使用 9:16 竖版插画（只换图，不改取景与布局）
+        桌面：img/banner-forest.jpg（横版）
+        手机：img/banner-mobile.jpg（9:16，cover 天然贴合竖屏）
+   ============================================================================= */
+@media (max-width: 767px) {
+  html.p-home #banner {
+    --p-banner-art: url('/img/banner-mobile.jpg');
+  }
+}
