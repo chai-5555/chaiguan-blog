@@ -238,6 +238,7 @@ font:
 custom_js:
   - /js/custom.js
   - /js/router.js   # 站内无刷新导航：让播放器跨页不被重建
+  - /js/fullscreen.js   # 顶栏最右侧的全屏切换按钮
   - /js/player.js   # 首屏音乐模块（曲库来自 /audio/playlist.json）
 
 # 指定自定义 .css 文件路径，用法和 custom_js 相同

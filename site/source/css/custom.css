@@ -1677,3 +1677,18 @@ html[data-p-color-forced] *::after {
 @media (max-width: 767px) {
   .p-music-compact .p-music { max-width: calc(100% - 1.5rem); margin: 0 .75rem .75rem auto; }
 }
+
+/* =============================================================================
+   21. 顶栏「全屏」按钮（js/fullscreen.js 注入，位于搜索/主题切换之后）
+   ============================================================================= */
+#p-fullscreen-btn .nav-link { display: inline-flex; align-items: center; }
+#p-fullscreen-btn svg {
+  width: 18px; height: 18px; display: block;
+  transition: transform .2s ease;
+}
+#p-fullscreen-btn .nav-link:hover svg { transform: scale(1.12); }
+#p-fullscreen-btn.is-on .nav-link svg { transform: rotate(180deg); }
+/* 移动端顶栏是折叠菜单，全屏按钮价值不大，只在 >=768px 显示 */
+@media (max-width: 767px) {
+  #p-fullscreen-btn { display: none; }
+}
