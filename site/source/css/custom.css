@@ -1887,3 +1887,17 @@ html[data-p-color-forced] *::after {
     --p-banner-art: url('/img/banner-mobile.jpg');
   }
 }
+
+/* 手机首页：新插画上部是明亮天空，奶白色的站名/汉堡压上去偏淡。
+   只在首页顶部加一条 200px 的暗色兜底（渐变到尾端归零，不影响画面主体）。 */
+@media (max-width: 767px) {
+  html.p-home #banner .mask {
+    background-image: linear-gradient(
+      180deg,
+      rgba(9, 11, 5, 0.74) 0px,
+      rgba(9, 11, 5, 0.52) 70px,
+      rgba(9, 11, 5, 0.24) 140px,
+      rgba(9, 11, 5, 0) 200px
+    ) !important;
+  }
+}
