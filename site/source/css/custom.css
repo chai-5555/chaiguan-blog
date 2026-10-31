@@ -1681,13 +1681,28 @@ html[data-p-color-forced] *::after {
 /* =============================================================================
    21. 顶栏「全屏」按钮（js/fullscreen.js 注入，位于搜索/主题切换之后）
    ============================================================================= */
-#p-fullscreen-btn .nav-link { display: inline-flex; align-items: center; }
-#p-fullscreen-btn svg {
-  width: 18px; height: 18px; display: block;
+/* 对齐要点：主题里搜索/月亮是 <i class="iconfont">（inline、14px、坐在基线上）。
+   用 flex 居中会让锚点盒子变矮、图标整体偏高 4px，所以这里改成"模仿 iconfont"：
+   锚点保持 inline，SVG 用 inline-block + 14px + 基线对齐。 */
+/* 对齐要点：其他导航项是 <i class="iconfont">（inline、14px、坐在基线上）。
+   这里不自己造盒子，直接给 <i> 套一个 14px 的 SVG mask —— 盒子结构与兄弟项完全一致，
+   对齐由布局自动保证（之前用 flex 居中，锚点盒子变矮导致整体上浮 4px）。 */
+#p-fullscreen-btn .p-fs-ico {
+  display: inline-block;
+  width: 14px; height: 14px;
+  background-color: currentColor;
+  -webkit-mask-image: url("data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23000' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'><path d='M12.5 3.5H17v4.5'/><path d='M17 3.5l-5 5'/><path d='M7.5 16.5H3V12'/><path d='M3 16.5l5-5'/></svg>");
+  mask-image: url("data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23000' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'><path d='M12.5 3.5H17v4.5'/><path d='M17 3.5l-5 5'/><path d='M7.5 16.5H3V12'/><path d='M3 16.5l5-5'/></svg>");
+  -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+  -webkit-mask-position: center; mask-position: center;
+  -webkit-mask-size: contain; mask-size: contain;
   transition: transform .2s ease;
 }
-#p-fullscreen-btn .nav-link:hover svg { transform: scale(1.12); }
-#p-fullscreen-btn.is-on .nav-link svg { transform: rotate(180deg); }
+#p-fullscreen-btn.is-on .p-fs-ico {
+  -webkit-mask-image: url("data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23000' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'><path d='M17 8.5h-4.5V4'/><path d='M12.5 8.5l5-5'/><path d='M3 11.5h4.5V16'/><path d='M7.5 11.5l-5 5'/></svg>");
+  mask-image: url("data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23000' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'><path d='M17 8.5h-4.5V4'/><path d='M12.5 8.5l5-5'/><path d='M3 11.5h4.5V16'/><path d='M7.5 11.5l-5 5'/></svg>");
+}
+#p-fullscreen-btn .nav-link:hover .p-fs-ico { transform: scale(1.12); }
 /* 移动端顶栏是折叠菜单，全屏按钮价值不大，只在 >=768px 显示 */
 @media (max-width: 767px) {
   #p-fullscreen-btn { display: none; }
