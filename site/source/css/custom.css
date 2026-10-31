@@ -1733,51 +1733,7 @@ html[data-p-color-forced] *::after {
   .p-music-compact .p-music-listbtn { margin-left: 0; }
 }
 
-/* —— 全屏「正在播放」层 —— */
-.p-music-sheet {
-  position: fixed; inset: 0; z-index: 1040;
-  display: flex; flex-direction: column; justify-content: flex-end;
-  /* 不透明底：半透明会让 banner 透上来，浅色下显得脏 */
-  background: var(--p-bg);
-  border-top: 1px solid var(--p-line);
-  border-radius: 20px 20px 0 0;
-  transform: translateY(100%);
-  visibility: hidden;
-  transition: transform .32s cubic-bezier(.4, 0, .2, 1), visibility .32s;
-}
-html.p-music-sheet-open .p-music-sheet { transform: none; visibility: visible; }
 
-.p-music-sheet-head { position: relative; display: flex; justify-content: center; padding: .7rem 0 .2rem; }
-.p-music-sheet-grab {
-  width: 40px; height: 4px; border-radius: 2px;
-  background: color-mix(in srgb, var(--p-ink) 28%, transparent);
-}
-.p-music-sheet-close {
-  position: absolute; right: .8rem; top: .35rem;
-  width: 36px; height: 36px; padding: 0;
-  display: inline-flex; align-items: center; justify-content: center;
-  border: 1px solid var(--p-line); border-radius: 10px;
-  background: var(--p-surface); color: var(--p-ink);
-  cursor: pointer;
-}
-.p-music-sheet-close svg { width: 20px; height: 20px; display: block; }
-.p-music-sheet-close:focus, .p-music-sheet-close:focus-visible { outline: none !important; }
-
-/* 面板搬进全屏层时，恢复成完整形态（覆盖掉迷你条那些规则） */
-html.p-music-sheet-open .p-music {
-  position: static;
-  width: 100%; max-width: none;
-  margin: 0; padding: 0 1.1rem 2rem;
-  display: grid; gap: 1rem;
-  background: transparent; border: 0; border-radius: 0; box-shadow: none;
-}
-html.p-music-sheet-open .p-music-bars { display: flex; height: 96px; }
-html.p-music-sheet-open .p-music-line { display: grid; }
-html.p-music-sheet-open .p-music-cover { width: 68px; height: 68px; border-radius: 16px; }
-html.p-music-sheet-open .p-music-title { font-size: 1.05rem; }
-html.p-music-sheet-open .p-music-artist { font-size: .85rem; }
-html.p-music-sheet-open .p-music-expand,
-html.p-music-sheet-open .p-music-listbtn { width: 40px; height: 40px; }
 
 /* —— 播放列表：手机端整页（Apple Music「待播清单」式） —— */
 @media (max-width: 767px) {
@@ -1827,3 +1783,64 @@ html.p-music-sheet-open .p-music-listbtn { width: 40px; height: 40px; }
 }
 .p-music-actions .p-music-listbtn,
 .p-music-actions .p-music-expand { margin-left: 0; }
+
+/* =============================================================================
+   23. 手机端「收起播放条」：条向下滑出 → 约 0.2s 后浮出小圆按钮
+   ============================================================================= */
+@media (max-width: 767px) {
+  .p-music { transition: transform .26s cubic-bezier(.4, 0, .2, 1), opacity .2s ease; }
+  html.p-music-collapsed .p-music {
+    transform: translateY(150%);
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+.p-music-fab { display: none; }
+
+@media (max-width: 767px) {
+  .p-music-fab {
+    position: fixed;
+    right: 1rem;
+    bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+    z-index: 901;
+    width: 44px; height: 44px; padding: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1px solid var(--p-line);
+    border-radius: 50%;
+    background: var(--p-surface);
+    color: var(--p-ink);
+    box-shadow: 0 8px 22px rgba(9, 11, 5, 0.22);
+    cursor: pointer;
+    opacity: 0;
+    transform: translateY(10px) scale(.86);
+    pointer-events: none;
+    transition: opacity .18s ease, transform .22s cubic-bezier(.34, 1.56, .64, 1);
+  }
+  .p-music-fab svg { width: 20px; height: 20px; display: block; }
+  .p-music-fab:focus, .p-music-fab:focus-visible { outline: none !important; }
+
+  /* 条滑走之后再冒出来（180ms 延迟 ≈ 用户要求的 0.2s） */
+  html.p-music-collapsed .p-music-fab {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+    transition-delay: .24s;   /* 条滑走(260ms)之后再冒出来，视觉上不抢戏 */
+  }
+
+  /* 极轻的呼吸光环：暗示音乐还在放 */
+  html.p-music-collapsed .p-music-fab::after {
+    content: "";
+    position: absolute; inset: -1px;
+    border-radius: 50%;
+    animation: p-fab-breathe 1.9s ease-out infinite;
+  }
+  @keyframes p-fab-breathe {
+    0%   { box-shadow: 0 0 0 0 color-mix(in srgb, var(--p-accent) 42%, transparent); }
+    70%, 100% { box-shadow: 0 0 0 10px color-mix(in srgb, var(--p-accent) 0%, transparent); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html.p-music-collapsed .p-music-fab::after { animation: none; }
+    .p-music { transition: none; }
+  }
+}

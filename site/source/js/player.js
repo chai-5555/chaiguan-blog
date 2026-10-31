@@ -148,59 +148,57 @@
     document.addEventListener('pm:page', syncCompact);
     syncCompact();
 
-    /* ---------- 手机端：全屏"正在播放"页 ----------
-       DOM 复用同一个面板：打开时把 wrap 移进全屏层，关闭时移回底部宿主。
-       这样 <audio>、频谱、进度条的状态一律不用重建。 */
-    var sheet = null, expandBtn = null;
+    /* ---------- 手机端：把播放条"收起来"成一个小圆按钮 ----------
+       点条上的箭头 → 条向下滑出，约 0.2s 后浮出小圆按钮；
+       点小圆按钮 → 条滑回来。收起状态记在 sessionStorage，跨页/刷新保持。 */
     var mobileMQ = window.matchMedia('(max-width: 767px)');
+    var STORE_KEY = 'p-music-collapsed';
+    var fab = null, expandBtn = null;
 
-    function ensureSheet() {
-      if (sheet) return sheet;
-      sheet = el('div', 'p-music-sheet');
-      sheet.id = 'p-music-sheet';
-      sheet.setAttribute('aria-hidden', 'true');
-      var head = el('div', 'p-music-sheet-head');
-      var grab = el('span', 'p-music-sheet-grab');
-      var close = el('button', 'p-music-sheet-close');
-      close.type = 'button';
-      close.setAttribute('aria-label', '收起播放器');
-      close.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-      close.addEventListener('click', closeSheet);
-      head.appendChild(grab);
-      head.appendChild(close);
-      sheet.appendChild(head);
-      document.body.appendChild(sheet);
-      return sheet;
+    function isMobile() { return mobileMQ.matches; }
+
+    function ensureFab() {
+      if (fab) return fab;
+      fab = el('button', 'p-music-fab');
+      fab.type = 'button';
+      fab.setAttribute('aria-label', '显示播放条');
+      fab.setAttribute('aria-hidden', 'true');
+      fab.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      fab.addEventListener('click', function () { setCollapsed(false); });
+      document.body.appendChild(fab);
+      return fab;
     }
 
-    function openSheet() {
-      if (!mobileMQ.matches) return;
-      ensureSheet();
-      sheet.appendChild(wrap);                       // 面板搬进全屏层
-      sheet.setAttribute('aria-hidden', 'false');
-      document.documentElement.classList.add('p-music-sheet-open');
-      document.body.style.overflow = 'hidden';
-      if (!playing) { /* 不自动播放，尊重访客 */ }
+    function setCollapsed(on, silent) {
+      if (on && !isMobile()) return;              // 桌面端没有收起形态
+      document.documentElement.classList.toggle('p-music-collapsed', on);
+      if (on) ensureFab();
+      if (fab) fab.setAttribute('aria-hidden', on ? 'false' : 'true');
+      try {
+        if (on) sessionStorage.setItem(STORE_KEY, '1');
+        else sessionStorage.removeItem(STORE_KEY);
+      } catch (e) { /* 隐私模式禁用存储时忽略 */ }
+      if (!silent && expandBtn) {
+        expandBtn.setAttribute('aria-label', '收起播放条');
+      }
     }
 
-    function closeSheet() {
-      if (!sheet || !document.documentElement.classList.contains('p-music-sheet-open')) return;
-      document.documentElement.classList.remove('p-music-sheet-open');
-      document.body.style.overflow = '';
-      sheet.setAttribute('aria-hidden', 'true');
-      host.appendChild(wrap);                        // 面板搬回底部迷你条
-      syncCompact();
-    }
-
-    /* 迷你条上点"展开"（或点封面右侧的标题区）打开全屏页 */
+    /* 迷你条右侧的箭头：手机上是"收起"，桌面端隐藏（CSS 控制） */
     expandBtn = el('button', 'p-music-expand');
     expandBtn.type = 'button';
-    expandBtn.setAttribute('aria-label', '展开播放器');
+    expandBtn.setAttribute('aria-label', '收起播放条');
     expandBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-    expandBtn.addEventListener('click', openSheet);
+    expandBtn.addEventListener('click', function () { setCollapsed(true); });
     actions.appendChild(expandBtn);
 
-    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeSheet(); });
+    /* 启动时恢复上次的收起状态（silent：不要动画，避免闪一下） */
+    try {
+      if (sessionStorage.getItem(STORE_KEY) === '1' && isMobile()) setCollapsed(true, true);
+    } catch (e) {}
+
+    window.addEventListener('resize', function () {
+      if (!isMobile() && document.documentElement.classList.contains('p-music-collapsed')) setCollapsed(false, true);
+    });
 
     /* ---------- audio ---------- */
     var audio = new Audio();
