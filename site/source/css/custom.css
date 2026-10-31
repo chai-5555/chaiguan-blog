@@ -1710,3 +1710,97 @@ html[data-p-color-forced] *::after {
 @media (max-width: 767px) {
   #p-fullscreen-btn { display: none; }
 }
+
+/* =============================================================================
+   22. 手机端播放器：底部迷你条 + 全屏「正在播放」页；播放列表改为整页
+   ============================================================================= */
+/* 展开按钮：只在手机出现，位于迷你条右侧、列表按钮左边 */
+.p-music-expand { display: none; }
+
+@media (max-width: 767px) {
+  .p-music-expand {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 34px; height: 34px; padding: 0; margin-left: auto;
+    border: 1px solid color-mix(in srgb, var(--p-ink) 18%, transparent);
+    border-radius: 10px;
+    background: transparent;
+    color: var(--p-ink);
+    cursor: pointer;
+  }
+  .p-music-expand svg { width: 18px; height: 18px; display: block; }
+  .p-music-expand:focus, .p-music-expand:focus-visible { outline: none !important; }
+  /* 手机上列表按钮紧跟其后，不要再吃 auto 外边距 */
+  .p-music-compact .p-music-listbtn { margin-left: 0; }
+}
+
+/* —— 全屏「正在播放」层 —— */
+.p-music-sheet {
+  position: fixed; inset: 0; z-index: 1040;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  /* 不透明底：半透明会让 banner 透上来，浅色下显得脏 */
+  background: var(--p-bg);
+  border-top: 1px solid var(--p-line);
+  border-radius: 20px 20px 0 0;
+  transform: translateY(100%);
+  visibility: hidden;
+  transition: transform .32s cubic-bezier(.4, 0, .2, 1), visibility .32s;
+}
+html.p-music-sheet-open .p-music-sheet { transform: none; visibility: visible; }
+
+.p-music-sheet-head { position: relative; display: flex; justify-content: center; padding: .7rem 0 .2rem; }
+.p-music-sheet-grab {
+  width: 40px; height: 4px; border-radius: 2px;
+  background: color-mix(in srgb, var(--p-ink) 28%, transparent);
+}
+.p-music-sheet-close {
+  position: absolute; right: .8rem; top: .35rem;
+  width: 36px; height: 36px; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--p-line); border-radius: 10px;
+  background: var(--p-surface); color: var(--p-ink);
+  cursor: pointer;
+}
+.p-music-sheet-close svg { width: 20px; height: 20px; display: block; }
+.p-music-sheet-close:focus, .p-music-sheet-close:focus-visible { outline: none !important; }
+
+/* 面板搬进全屏层时，恢复成完整形态（覆盖掉迷你条那些规则） */
+html.p-music-sheet-open .p-music {
+  position: static;
+  width: 100%; max-width: none;
+  margin: 0; padding: 0 1.1rem 2rem;
+  display: grid; gap: 1rem;
+  background: transparent; border: 0; border-radius: 0; box-shadow: none;
+}
+html.p-music-sheet-open .p-music-bars { display: flex; height: 96px; }
+html.p-music-sheet-open .p-music-line { display: grid; }
+html.p-music-sheet-open .p-music-cover { width: 68px; height: 68px; border-radius: 16px; }
+html.p-music-sheet-open .p-music-title { font-size: 1.05rem; }
+html.p-music-sheet-open .p-music-artist { font-size: .85rem; }
+html.p-music-sheet-open .p-music-expand,
+html.p-music-sheet-open .p-music-listbtn { width: 40px; height: 40px; }
+
+/* —— 播放列表：手机端整页（Apple Music「待播清单」式） —— */
+@media (max-width: 767px) {
+  .p-playlist {
+    width: 100vw; height: 100dvh;
+    inset: 0;
+    border-left: 0; border-radius: 0;
+    box-shadow: none;
+  }
+  .p-playlist-head { padding: 1.1rem 1rem .85rem; }
+  .p-playlist-list { padding-bottom: 1.5rem; }
+  .p-playlist-item { padding: .7rem 1rem; }
+  .p-playlist-title { font-size: 1rem; }
+  .p-playlist-artist { font-size: .82rem; }
+}
+
+/* 手机端列表：长歌名允许折两行，不再一路省略号 */
+@media (max-width: 767px) {
+  .p-playlist-title {
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}

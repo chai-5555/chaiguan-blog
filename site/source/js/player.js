@@ -133,14 +133,71 @@
       /* 注意：不能用 getBoundingClientRect()，它已经被上一帧的 translateY 影响了，
          会慢一帧。静止态的底部位置 = 视口高 - CSS 里的 bottom 偏移（2.75rem），是常数。 */
       var restBottom = window.innerHeight - (parseFloat(getComputedStyle(wrap).bottom) || 0);
-      var compact = !isHome() || (y > 0 && restBottom - y <= 2);
+      /* 手机端：不做"跟随 banner"那套（banner 太短，一滚就压正文），恒为底部迷你条 */
+      var mobile = window.matchMedia('(max-width: 767px)').matches;
+      var compact = mobile || !isHome() || (y > 0 && restBottom - y <= 2);
       document.documentElement.classList.toggle('p-music-compact', compact);
       /* 未收成迷你条时，让常驻宿主跟随文档滚动：视觉上等同于"贴在 banner 底部" */
       host.style.transform = compact ? '' : 'translateY(' + (-y) + 'px)';
     }
     window.addEventListener('scroll', syncCompact, { passive: true });
+    window.addEventListener('resize', syncCompact);
     document.addEventListener('pm:page', syncCompact);
     syncCompact();
+
+    /* ---------- 手机端：全屏"正在播放"页 ----------
+       DOM 复用同一个面板：打开时把 wrap 移进全屏层，关闭时移回底部宿主。
+       这样 <audio>、频谱、进度条的状态一律不用重建。 */
+    var sheet = null, expandBtn = null;
+    var mobileMQ = window.matchMedia('(max-width: 767px)');
+
+    function ensureSheet() {
+      if (sheet) return sheet;
+      sheet = el('div', 'p-music-sheet');
+      sheet.id = 'p-music-sheet';
+      sheet.setAttribute('aria-hidden', 'true');
+      var head = el('div', 'p-music-sheet-head');
+      var grab = el('span', 'p-music-sheet-grab');
+      var close = el('button', 'p-music-sheet-close');
+      close.type = 'button';
+      close.setAttribute('aria-label', '收起播放器');
+      close.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      close.addEventListener('click', closeSheet);
+      head.appendChild(grab);
+      head.appendChild(close);
+      sheet.appendChild(head);
+      document.body.appendChild(sheet);
+      return sheet;
+    }
+
+    function openSheet() {
+      if (!mobileMQ.matches) return;
+      ensureSheet();
+      sheet.appendChild(wrap);                       // 面板搬进全屏层
+      sheet.setAttribute('aria-hidden', 'false');
+      document.documentElement.classList.add('p-music-sheet-open');
+      document.body.style.overflow = 'hidden';
+      if (!playing) { /* 不自动播放，尊重访客 */ }
+    }
+
+    function closeSheet() {
+      if (!sheet || !document.documentElement.classList.contains('p-music-sheet-open')) return;
+      document.documentElement.classList.remove('p-music-sheet-open');
+      document.body.style.overflow = '';
+      sheet.setAttribute('aria-hidden', 'true');
+      host.appendChild(wrap);                        // 面板搬回底部迷你条
+      syncCompact();
+    }
+
+    /* 迷你条上点"展开"（或点封面右侧的标题区）打开全屏页 */
+    expandBtn = el('button', 'p-music-expand');
+    expandBtn.type = 'button';
+    expandBtn.setAttribute('aria-label', '展开播放器');
+    expandBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    expandBtn.addEventListener('click', openSheet);
+    idBox.appendChild(expandBtn);
+
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeSheet(); });
 
     /* ---------- audio ---------- */
     var audio = new Audio();
