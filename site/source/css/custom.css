@@ -1804,3 +1804,26 @@ html.p-music-sheet-open .p-music-listbtn { width: 40px; height: 40px; }
     overflow: hidden;
   }
 }
+
+/* 迷你条（浅底）里的两个按钮：并排靠右，深色描边，否则奶白描边在纸白底上几乎看不见 */
+.p-music-compact .p-music-id .p-music-listbtn,
+.p-music-compact .p-music-id .p-music-expand {
+  margin-left: 0;
+  border-color: var(--p-line);
+  color: var(--p-ink);
+  background: transparent;
+}
+.p-music-compact .p-music-id .p-music-expand { margin-left: auto; }   /* 把这一组推到最右 */
+.p-music-compact .p-music-id .p-music-listbtn:hover,
+.p-music-compact .p-music-id .p-music-expand:hover {
+  color: var(--p-accent-text);
+  border-color: var(--p-accent-2);
+}
+
+/* 迷你条右侧按钮组：并排、靠右（放在网格的同一列里） */
+.p-music-actions {
+  display: flex; align-items: center; gap: .45rem;
+  margin-left: auto; flex: 0 0 auto;
+}
+.p-music-actions .p-music-listbtn,
+.p-music-actions .p-music-expand { margin-left: 0; }

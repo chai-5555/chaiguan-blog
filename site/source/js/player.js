@@ -97,7 +97,10 @@
       '<rect x="4" y="11" width="12.2" height="1.7" rx="0.85" fill="currentColor"/>' +
       '<rect x="4" y="15" width="12.2" height="1.7" rx="0.85" fill="currentColor"/>' +
       '</svg>';
-    idBox.appendChild(listBtn);
+    /* 两个按钮放进同一个容器：网格里只占一列，才能并排靠右 */
+    var actions = el('div', 'p-music-actions');
+    actions.appendChild(listBtn);
+    idBox.appendChild(actions);
 
     wrap.appendChild(barsBox);
     wrap.appendChild(line);
@@ -195,7 +198,7 @@
     expandBtn.setAttribute('aria-label', '展开播放器');
     expandBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
     expandBtn.addEventListener('click', openSheet);
-    idBox.appendChild(expandBtn);
+    actions.appendChild(expandBtn);
 
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeSheet(); });
 
