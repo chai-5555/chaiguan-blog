@@ -1651,6 +1651,7 @@ html[data-p-color-forced] *::after {
   pointer-events: none;         /* 宿主本身不吃点击，只有面板可交互 */
 }
 .p-music-host .p-music { pointer-events: auto; }
+.p-music-host { will-change: transform; }   /* 跟随滚动时避免抖动 */
 
 /* 迷你条：非首页、或首页已滚过插画 —— 必须不透明，盖在正文上才不脏 */
 .p-music-compact .p-music {

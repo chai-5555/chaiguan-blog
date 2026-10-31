@@ -120,11 +120,23 @@
     function isHome() {
       return location.pathname === '/' || /\/index\.html$/.test(location.pathname);
     }
+    /* 三个状态：
+       ① 首页顶部 —— 完整面板，跟着 banner 一起滚走（host 用 translateY 抵消滚动，
+          等价于以前的 absolute 定位，只是元素常驻不被销毁）
+       ② 首页滚过大面板 —— 面板已经离开视口，出现右下角迷你条
+       ③ 非首页 —— 直接迷你条 */
     function syncCompact() {
-      var b = document.getElementById('banner');
-      var limit = b ? b.getBoundingClientRect().height - 140 : 0;
-      var compact = !isHome() || window.pageYOffset > limit;
+      var y = window.pageYOffset || document.documentElement.scrollTop || 0;
+      /* 未收成迷你条时面板是"贴着 banner 底边"的，所以它跟着滚出视口顶部时
+         rect.bottom 会走到 ≤0；那一刻才切迷你条 —— 中间不会有面板压在正文上的滞留段，
+         也不会有突然的位置跳变。 */
+      /* 注意：不能用 getBoundingClientRect()，它已经被上一帧的 translateY 影响了，
+         会慢一帧。静止态的底部位置 = 视口高 - CSS 里的 bottom 偏移（2.75rem），是常数。 */
+      var restBottom = window.innerHeight - (parseFloat(getComputedStyle(wrap).bottom) || 0);
+      var compact = !isHome() || (y > 0 && restBottom - y <= 2);
       document.documentElement.classList.toggle('p-music-compact', compact);
+      /* 未收成迷你条时，让常驻宿主跟随文档滚动：视觉上等同于"贴在 banner 底部" */
+      host.style.transform = compact ? '' : 'translateY(' + (-y) + 'px)';
     }
     window.addEventListener('scroll', syncCompact, { passive: true });
     document.addEventListener('pm:page', syncCompact);
