@@ -1953,3 +1953,12 @@ html[data-p-color-forced] *::after {
     bottom: 96px !important;    /* 让开常驻小圆钮（52px + 边距） */
   }
 }
+
+/* 手机端：内页 banner 比首页矮很多，cover 会纵向裁一大截；
+   竖版插画的人物在上半部，所以取景锚点从上文说的 100%（底）改成 14%（近顶） */
+@media (max-width: 767px) {
+  #banner {
+    background-position: center, 50% var(--p-banner-art-pos-y, 14%), center !important;
+  }
+  /* 首页 banner 是整屏，cover 几乎不裁，位置对它没有影响，无需单独排除 */
+}
