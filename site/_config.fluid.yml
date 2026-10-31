@@ -342,7 +342,11 @@ canonical:
 # 对页面中的图片和评论插件进行懒加载处理，可见范围外的元素不会提前加载
 # Lazy loading of images and comment plugin on the page
 lazyload:
-  enable: true
+  # 关闭懒加载：主题会给 <img> 塞 srcset="/img/loading.svg" 作占位，
+  # 而浏览器在同时存在 src+srcset 时优先用 srcset → 头像一直显示占位图；
+  # 加上我们用 router.js 做无刷新导航，新插入的图片也不会再被 lazy 插件接管。
+  # 本站图片很少（头像/封面/图标），直接全部即时加载更稳。
+  enable: false
 
   # 加载时的占位图片
   # The placeholder image when loading
