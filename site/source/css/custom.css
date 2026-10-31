@@ -1859,3 +1859,20 @@ html[data-p-color-forced] *::after {
     margin-top: 18px !important;
   }
 }
+
+/* =============================================================================
+   25. 手机首页：首屏只留插画（满屏）+ 底部下滑提示，文章模块完全在首屏之下
+        主题的 banner.styl 在窄屏给 .header-inner 加了 max-height（100/ratio vw ≈ 100vw），
+         把 banner 压成"正方形高"，于是文章卡片露在首屏里。这里在手机首页解除该限制。
+   ============================================================================= */
+@media (max-width: 767px) {
+  /* 注意：#banner 是 .header-inner 的子元素（不是反过来），高度由它决定 */
+  html.p-home .header-inner {
+    max-height: none !important;
+    height: 100dvh !important;      /* dvh：iOS 地址栏收起/展开时不跳 */
+  }
+  /* 箭头要让开底部的常驻迷你条（条高 ~61px + 12px 边距），落在它上方 12px */
+  html.p-home #banner.has-music .scroll-down-bar {
+    bottom: 88px !important;
+  }
+}
