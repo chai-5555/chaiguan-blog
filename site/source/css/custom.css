@@ -1897,44 +1897,17 @@ html[data-p-color-forced] *::after {
   }
 }
 
-/* 手机首页：.mask 只保留很轻的顶部压暗（logo/汉堡需要对比），
-   底部不再铺大面积深色 —— 竖版插画是 contain 居中显示的，铺深色会把画面下半截盖掉
-   （这是上一版"人物没截全"的实际原因：不是裁切，是被这层遮罩吃掉了）。 */
+/* A 方案：插画下边缘与深色带之间做一段柔化过渡，消除那条硬接缝
+   （用主题自带的 .mask 层承载，避免再引入伪元素） */
 @media (max-width: 767px) {
   html.p-home #banner .mask {
-    background-image: linear-gradient(
+    background: linear-gradient(
       180deg,
-      rgba(9, 11, 5, 0.28) 0%,
-      rgba(9, 11, 5, 0.10) 18%,
-      rgba(9, 11, 5, 0) 34%
+      rgba(43, 42, 22, 0) 0%,
+      rgba(43, 42, 22, 0) 31%,
+      rgba(43, 42, 22, 0.92) 39%,
+      var(--p-banner-2) 47%,
+      var(--p-banner-2) 100%
     ) !important;
-  }
-}
-
-/* =============================================================================
-   26. 手机首页插画改用竖构图（3:4）素材：contain 完整显示，上下用 banner 底色接住
-        横版插画在竖屏满屏下只能看到 29% 宽度，人物必被裁（实测），故手机端换图。
-   ============================================================================= */
-@media (max-width: 767px) {
-  html.p-home #banner {
-    --p-banner-art: url('/img/banner-portrait.jpg');
-    /* 层序不变：① 底部缓收 ② 插画（contain 完整显示）③ 底色 */
-    background-size: auto, contain, auto !important;
-    background-position: center, center center, center !important;
-  }
-}
-
-/* 手机首页 + 竖版插画：底部缓收只留 14%（原来 31% 会在画面下方铺出一条奶油色亮带，
-   既破坏"深色上下的海报感"，也让下滑箭头在亮底上失去对比） */
-@media (max-width: 767px) {
-  html.p-home #banner {
-    background-image:
-      linear-gradient(to top,
-        var(--p-bg) 0%,
-        color-mix(in srgb, var(--p-bg) 66%, transparent) 5%,
-        color-mix(in srgb, var(--p-bg) 30%, transparent) 10%,
-        transparent 15%),
-      var(--p-banner-art),
-      linear-gradient(168deg, var(--p-banner-1) 0%, var(--p-banner-2) 50%, var(--p-banner-3) 100%) !important;
   }
 }
