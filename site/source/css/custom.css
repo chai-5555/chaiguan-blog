@@ -1962,3 +1962,26 @@ html[data-p-color-forced] *::after {
   }
   /* 首页 banner 是整屏，cover 几乎不裁，位置对它没有影响，无需单独排除 */
 }
+
+/* 播放中的小圆钮：光环 + 轻微缩放，明确"音乐还在放" */
+@media (max-width: 767px) {
+  html.p-music-collapsed.p-music-playing .p-music-fab::after {
+    animation: p-fab-breathe 1.7s ease-out infinite !important;
+  }
+  html.p-music-collapsed.p-music-playing .p-music-fab {
+    animation: p-fab-pulse 1.7s ease-in-out infinite;
+    border-color: color-mix(in srgb, var(--p-accent) 55%, transparent);
+  }
+  @keyframes p-fab-breathe {
+    0%   { box-shadow: 0 0 0 0 color-mix(in srgb, var(--p-accent) 58%, transparent); }
+    72%, 100% { box-shadow: 0 0 0 14px color-mix(in srgb, var(--p-accent) 0%, transparent); }
+  }
+  @keyframes p-fab-pulse {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.07); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html.p-music-collapsed.p-music-playing .p-music-fab,
+    html.p-music-collapsed.p-music-playing .p-music-fab::after { animation: none !important; }
+  }
+}

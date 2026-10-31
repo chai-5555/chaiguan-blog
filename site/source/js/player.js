@@ -152,9 +152,8 @@
 
     /* ---------- 手机端：把播放条"收起来"成一个小圆按钮 ----------
        点条上的箭头 → 条向下滑出，约 0.2s 后浮出小圆按钮；
-       点小圆按钮 → 条滑回来。收起状态记在 sessionStorage，跨页/刷新保持。 */
+       点小圆按钮 → 条滑回来。每次进入站点都是"收起"态（只露封面小圆钮）。 */
     var mobileMQ = window.matchMedia('(max-width: 767px)');
-    var STORE_KEY = 'p-music-collapsed';
     var fab = null, expandBtn = null;
 
     function isMobile() { return mobileMQ.matches; }
@@ -194,17 +193,13 @@
       }
     }
 
-    function setCollapsed(on, silent) {
+    /* 状态只存在内存里：每次进入站点都是"只露封面小圆钮"，点开才出现播放条。
+       站内切页（router 无刷新）时播放器不重建，所以当前状态会自然延续。 */
+    function setCollapsed(on) {
       if (on && !isMobile()) return;              // 桌面端没有收起形态
       document.documentElement.classList.toggle('p-music-collapsed', on);
       if (on) ensureFab();
       if (fab) fab.setAttribute('aria-hidden', on ? 'false' : 'true');
-      try {
-        sessionStorage.setItem(STORE_KEY, on ? '1' : '0');   // 记住用户的选择（含"展开"）
-      } catch (e) { /* 隐私模式禁用存储时忽略 */ }
-      if (!silent && expandBtn) {
-        expandBtn.setAttribute('aria-label', '收起播放条');
-      }
     }
 
     /* 迷你条右侧的箭头：手机上是"收起"，桌面端隐藏（CSS 控制） */
@@ -215,14 +210,8 @@
     expandBtn.addEventListener('click', function () { setCollapsed(true); });
     actions.appendChild(expandBtn);
 
-    /* 启动状态：手机端默认就是"收起"（首屏只露出封面小圆钮，播放条要点开才出现）；
-       用户手动展开过就记住，下次仍展开。 */
-    try {
-      var stored = sessionStorage.getItem(STORE_KEY);
-      setCollapsed(isMobile() ? stored !== '0' : false, true);
-    } catch (e) {
-      setCollapsed(isMobile(), true);
-    }
+    /* 启动状态：手机端一律"收起"——首屏只露封面小圆钮，点它才弹出播放条 */
+    setCollapsed(isMobile());
 
     window.addEventListener('resize', function () {
       if (!isMobile() && document.documentElement.classList.contains('p-music-collapsed')) setCollapsed(false, true);
