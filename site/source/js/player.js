@@ -140,6 +140,8 @@
       var mobile = window.matchMedia('(max-width: 767px)').matches;
       var compact = mobile || !isHome() || (y > 0 && restBottom - y <= 2);
       document.documentElement.classList.toggle('p-music-compact', compact);
+      /* 首页标记：CSS 用它给"文章模块下移、让下滑箭头贴底"这类只在首页生效的规则 */
+      document.documentElement.classList.toggle('p-home', isHome());
       /* 未收成迷你条时，让常驻宿主跟随文档滚动：视觉上等同于"贴在 banner 底部" */
       host.style.transform = compact ? '' : 'translateY(' + (-y) + 'px)';
     }
