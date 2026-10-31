@@ -1690,17 +1690,20 @@ html[data-p-color-forced] *::after {
 #p-fullscreen-btn .p-fs-ico {
   display: inline-block;
   width: 14px; height: 14px;
+  /* inline-block 的底边贴基线，而 iconfont 字形是按字体上下沿排的 —— 实测会高 2px，
+     用 -0.14em（= -2px）把它压回去，和搜索/月亮坐在同一条线上 */
+  vertical-align: -0.14em;
   background-color: currentColor;
-  -webkit-mask-image: url("data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23000' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'><path d='M12.5 3.5H17v4.5'/><path d='M17 3.5l-5 5'/><path d='M7.5 16.5H3V12'/><path d='M3 16.5l5-5'/></svg>");
-  mask-image: url("data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23000' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'><path d='M12.5 3.5H17v4.5'/><path d='M17 3.5l-5 5'/><path d='M7.5 16.5H3V12'/><path d='M3 16.5l5-5'/></svg>");
+  -webkit-mask-image: url("data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M5 1H1v4'/><path d='M9 1h4v4'/><path d='M13 9v4H9'/><path d='M5 13H1V9'/></svg>");
+  mask-image: url("data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M5 1H1v4'/><path d='M9 1h4v4'/><path d='M13 9v4H9'/><path d='M5 13H1V9'/></svg>");
   -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
   -webkit-mask-position: center; mask-position: center;
   -webkit-mask-size: contain; mask-size: contain;
   transition: transform .2s ease;
 }
 #p-fullscreen-btn.is-on .p-fs-ico {
-  -webkit-mask-image: url("data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23000' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'><path d='M17 8.5h-4.5V4'/><path d='M12.5 8.5l5-5'/><path d='M3 11.5h4.5V16'/><path d='M7.5 11.5l-5 5'/></svg>");
-  mask-image: url("data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23000' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'><path d='M17 8.5h-4.5V4'/><path d='M12.5 8.5l5-5'/><path d='M3 11.5h4.5V16'/><path d='M7.5 11.5l-5 5'/></svg>");
+  -webkit-mask-image: url("data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M1 5h4V1'/><path d='M13 5H9V1'/><path d='M9 13V9h4'/><path d='M5 13V9H1'/></svg>");
+  mask-image: url("data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M1 5h4V1'/><path d='M13 5H9V1'/><path d='M9 13V9h4'/><path d='M5 13V9H1'/></svg>");
 }
 #p-fullscreen-btn .nav-link:hover .p-fs-ico { transform: scale(1.12); }
 /* 移动端顶栏是折叠菜单，全屏按钮价值不大，只在 >=768px 显示 */
