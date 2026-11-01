@@ -77,6 +77,10 @@
     img.alt = '';
     img.loading = 'lazy';
     cover.appendChild(img);
+    /* 暂停时盖在封面上的一层"播放"提示：半透明压暗 + 播放三角，播放中自动消失 */
+    var playHalo = el('span', 'p-music-cover-play');
+    playHalo.setAttribute('aria-hidden', 'true');
+    cover.appendChild(playHalo);
     var meta = el('div', 'p-music-meta');
     var title = el('div', 'p-music-title', '');
     var artist = el('div', 'p-music-artist', '');
@@ -490,6 +494,7 @@
       if (p && p.catch) p.catch(function () { playing = false; wrap.classList.remove('is-playing'); });
       playing = true;
       wrap.classList.add('is-playing');
+      cover.setAttribute('aria-label', '暂停');
       document.documentElement.classList.add('p-music-playing');   // 只有真正在播时，小圆钮才呼吸
       startLoop();
     }
@@ -497,6 +502,7 @@
       audio.pause();
       playing = false;
       wrap.classList.remove('is-playing');
+      cover.setAttribute('aria-label', '播放');
       document.documentElement.classList.remove('p-music-playing');
       if (REDUCE) stopLoop();
     }

@@ -1985,3 +1985,39 @@ html[data-p-color-forced] *::after {
     html.p-music-collapsed.p-music-playing .p-music-fab::after { animation: none !important; }
   }
 }
+
+/* =============================================================================
+   28. 封面上的播放提示：暂停时半透明压暗 + 播放三角（点击封面=播放，符合直觉）
+   ============================================================================= */
+.p-music-cover-play {
+  position: absolute; inset: 0;
+  display: block;
+  background: rgba(9, 11, 5, 0.34);
+  opacity: 0;
+  transition: opacity .18s ease;
+  pointer-events: none;
+}
+.p-music-cover-play::before {
+  content: "";
+  position: absolute; left: 50%; top: 50%;
+  width: 0; height: 0;
+  border-left: 11px solid #fff;
+  border-top: 7.5px solid transparent;
+  border-bottom: 7.5px solid transparent;
+  transform: translate(-34%, -50%);
+  filter: drop-shadow(0 1px 3px rgba(9, 11, 5, 0.55));
+}
+/* 暂停（含"还没开始播"）→ 显示；播放中 → 消失 */
+.p-music:not(.is-playing) .p-music-cover-play { opacity: 1; }
+
+@media (max-width: 767px) {
+  .p-music-cover-play::before {
+    border-left-width: 9px;
+    border-top-width: 6px;
+    border-bottom-width: 6px;
+  }
+}
+
+/* 无封面（首字母）时，暂停状态只显示播放三角，别让大写字母和三角叠在一起 */
+.p-music:not(.is-playing) .p-music-cover.is-nocover::after { opacity: 0; }   /* 首字母由 ::after 绘制 */
+.p-music-cover-play { background: rgba(9, 11, 5, 0.42); }
